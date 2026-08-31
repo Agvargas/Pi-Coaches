@@ -23,6 +23,8 @@ Terminales comprobadas mediante `link_list` el 2026-08-31T18:05:12Z y de nuevo e
 | 2026-08-31T18:05:12Z | IMPLEMENTING | Orc → Cod | Despacho autorizado para operación Git acotada. | Esperar `REVIEW REQUEST` de Cod a Rev. |
 | 2026-08-31T18:06:40Z | BLOCKED | Cod → Orc | `git ls-remote --symref origin HEAD` agotó el tiempo de espera al conectar a `private-git.example.invalid:22`. | Esperar acceso SSH/red operativo o una decisión humana que autorice un transporte alternativo. |
 | 2026-08-31T18:07:40Z | IMPLEMENTING | Persona responsable → Orc → Cod | `DECISIÓN PC-01: usar HTTPS`; reanudación con URL HTTPS autorizada. | Esperar `REVIEW REQUEST` de Cod a Rev o bloqueo. |
+| 2026-08-31T18:10:45Z | QA_PENDING | Rev → Orc | `APPROVE` recibido para QA 0, ronda 0. | Solicitar QA humana de PowerShell. |
+| 2026-08-31T18:11:59Z | DONE | Persona responsable → Orc | `QA OK PC-01` recibido. | Cerrar; no hay documentación autorizada para Doc. |
 
 ## Decisiones
 
@@ -37,22 +39,23 @@ Terminales comprobadas mediante `link_list` el 2026-08-31T18:05:12Z y de nuevo e
 | Iteración QA | Ciclo | Fuente y aclaración sustantiva | Contexto actualizado | Acción |
 | --- | --- | --- | --- | --- |
 | 0 | 1 | La persona responsable autorizó HTTPS tras el timeout SSH. | IMPLEMENTING; `.git/` inicializado y `origin` debe cambiarse a HTTPS antes de reintentar inspección. | Cod reanudado; entrega a Rev o bloqueo. |
+| 0 | 1 | Rev aprobó QA 0/ronda 0: `master` y `origin/master` en `e2dad6b798ed039e67fdb8add2159206c12de9c6`; README remoto preservado. | QA_PENDING. | Esperar resultado de PowerShell de la persona responsable. |
 
 ## Rondas de revisión
 
 | Iteración QA | Ciclo | Ronda | Entrega de Cod | Hallazgo de Rev | Acción |
 | --- | --- | --- | --- | --- | --- |
-| 0 | 1 | 0 | pendiente | pendiente | Sin acción hasta aprobación y entrega. |
+| 0 | 1 | 0 | Entrega de Cod revisada por Rev. | APPROVE: árbol limpio; HTTPS autorizado; README sin cambios; exclusiones y reinclusión verificadas. | QA humana pendiente. |
 
 ## QA humana
 
 | Fecha/hora | Comando PowerShell | Resultado observado | Acción |
 | --- | --- | --- | --- |
-| | `git -C 'C:\Users\andgu\OneDrive\Documents\Pi-Coach' status --short --branch; git -C 'C:\Users\andgu\OneDrive\Documents\Pi-Coach' log --oneline --decorate -n 3` | pendiente | Ejecutar solo tras revisión técnica. |
+| 2026-08-31T18:11:59Z | `git -C 'C:\Users\andgu\OneDrive\Documents\Pi-Coach' status --short --branch; git -C 'C:\Users\andgu\OneDrive\Documents\Pi-Coach' log --oneline --decorate -n 3` | `QA OK PC-01` comunicado por la persona responsable | Cerrar tarea. |
 
 ## Cierre
 
 - Documentación enviada a Doc: No aplica; no autorizada.
 - Confirmación de documentación: No aplica.
-- Estado final: pendiente.
-- Riesgos residuales: Acceso SSH por puerto 22 no disponible; contenido real del remoto y rama predeterminada no comprobados. No se creó `.gitignore`, commit ni push.
+- Estado final: DONE (2026-08-31T18:11:59Z).
+- Riesgos residuales: `git diff --check d46d3be..e2dad6b` reportó espacios finales preexistentes en `.pi/coordination/templates/task-plan.md`, incorporados sin edición; la disponibilidad/autenticación HTTPS futura depende del entorno remoto.

@@ -12,7 +12,7 @@
 | Rev | Rev | `C:\Users\andgu\OneDrive\Documents\Pi-Coach` | idle |
 | Doc | Doc | `C:\Users\andgu\OneDrive\Documents\Pi-Coach` | idle |
 
-Terminales comprobadas con `link_list` el 2026-08-31T18:54:54Z antes del despacho: Orc, Sdk, Cod, Rev y Doc en `C:\Users\andgu\OneDrive\Documents\Pi-Coach`; Cod estaba `idle`.
+Terminales comprobadas con `link_list` el 2026-08-31T18:54:54Z y 2026-08-31T19:10:44Z antes de cada despacho: Orc, Sdk, Cod, Rev y Doc en `C:\Users\andgu\OneDrive\Documents\Pi-Coach`; Cod estaba `idle`.
 
 ## Transiciones
 
@@ -23,6 +23,9 @@ Terminales comprobadas con `link_list` el 2026-08-31T18:54:54Z antes del despach
 | 2026-08-31T18:50:41Z | DRAFT | Orc | PC-00 cerrado; contrato concreto de servidor local y sesión Coach redactado. | Esperar `APROBADO PC-02`. |
 | 2026-08-31T18:54:54Z | APPROVED | Persona responsable | `APROBADO PC-02` recibido. | Pasar a implementación. |
 | 2026-08-31T18:54:54Z | IMPLEMENTING | Orc → Cod | Despacho autorizado para ronda 0. | Esperar `REVIEW REQUEST` de Cod a Rev. |
+| 2026-08-31T19:03:10Z | QA_PENDING | Rev → Orc | `APPROVE` recibido para QA 0/ronda 0; commit `2ff48e9cc2916226bf9b68014ea2c964c15c8b46` coincide con `origin/master`. | Solicitar QA humana de PowerShell. |
+| 2026-08-31T19:08:30Z | DECISION_PENDING | Orc | Inspección Git solicitada por persona responsable detecta `node_modules/` y `NUL` sin seguimiento; actualizaciones de PC-01/PC-02 pendientes. | Esperar autorización para higiene Git y cierre en el mismo slice; QA suspendida. |
+| 2026-08-31T19:10:44Z | IMPLEMENTING | Persona responsable → Orc → Cod | `DECISIÓN PC-02: autorizar higiene Git y cierre`; despacho ronda 1. | Esperar `REVIEW REQUEST` de Cod a Rev. |
 
 ## Decisiones
 
@@ -36,22 +39,26 @@ Terminales comprobadas con `link_list` el 2026-08-31T18:54:54Z antes del despach
 | Iteración QA | Ciclo | Fuente y aclaración sustantiva | Contexto actualizado | Acción |
 | --- | --- | --- | --- | --- |
 | 0 | 1 | `APROBADO PC-02` recibido; PC-00 DONE aporta evidencia de SDK y decisiones humanas. | IMPLEMENTING con contrato `GET /health` y `POST /v1/sessions`. | Cod implementa ronda 0 y entrega a Rev. |
+| 0 | 1 | Rev aprobó QA 0/ronda 0: contrato HTTP, sesiones, aislamiento, errores y secretos comprobados estáticamente. | QA_PENDING; commit publicado. | Esperar prueba PowerShell humana. |
+| 0 | 1 | Inspección posterior muestra archivos locales no incluidos y registros de cierre pendientes. | DECISION_PENDING; no afecta el código revisado, pero impide árbol limpio. | Esperar autorización; después reanudar ronda técnica 1. |
+| 0 | 1 | Higiene Git y cierre autorizados. | IMPLEMENTING; agregar solo `node_modules/` a `.gitignore`, retirar `NUL` y confirmar registros pendientes. | Cod entrega a Rev en ronda 1. |
 
 ## Rondas de revisión
 
 | Iteración QA | Ciclo | Ronda | Entrega de Cod | Hallazgo de Rev | Acción |
 | --- | --- | --- | --- | --- | --- |
-| 0 | 1 | 0 | pendiente | pendiente | No procede hasta aprobación. |
+| 0 | 1 | 0 | Entrega de Cod revisada. | APPROVE: contrato, sesiones in-memory, aislamiento, secretos y commit/push verificados. | QA humana suspendida para higiene Git autorizada. |
+| 0 | 1 | 1 | pendiente | pendiente | Esperar cierre de Cod y nueva revisión. |
 
 ## QA humana
 
 | Fecha/hora | Comando PowerShell | Resultado observado | Acción |
 | --- | --- | --- | --- |
-| | `Invoke-RestMethod http://127.0.0.1:3000/health; Invoke-RestMethod -Method Post -Uri http://127.0.0.1:3000/v1/sessions -ContentType 'application/json' -Body '{}'` | pendiente | Ejecutar tras revisión técnica, con `npm start` en otra consola. |
+| | `Invoke-RestMethod http://127.0.0.1:3000/health; Invoke-RestMethod -Method Post -Uri http://127.0.0.1:3000/v1/sessions -ContentType 'application/json' -Body '{}'` | pendiente de la persona responsable | Ejecutar durante QA_PENDING, con `npm start` en otra consola. |
 
 ## Cierre
 
 - Documentación enviada a Doc: No aplica; no autorizada.
 - Confirmación de documentación: No aplica.
 - Estado final: pendiente.
-- Riesgos residuales: La creación de sesión no prueba aún una respuesta conversacional; cuenta local solo para pruebas; identidad independiente queda para un slice futuro.
+- Riesgos residuales: La creación de sesión no prueba aún una respuesta conversacional, red ni cupo; cuenta local solo para pruebas; identidad independiente queda para un slice futuro. `node_modules/` y `NUL` están sin seguimiento; PC-01/PC-02 tienen actualizaciones de coordinación pendientes de commit/push.

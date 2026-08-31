@@ -3,3 +3,4 @@
 !.pi/coordination/**
 .vscode/
 AGENTS.md
+node_modules/

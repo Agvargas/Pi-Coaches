@@ -7,8 +7,8 @@
 - Estado actual: `IMPLEMENTING`
 - Persona responsable: aprobó `PC-02`
 - Creado: 2026-08-31T18:17:23Z
-- Última actualización: 2026-08-31T18:54:54Z
-- Aprobación vigente: `APROBADO PC-02` (2026-08-31T18:54:54Z)
+- Última actualización: 2026-08-31T19:10:44Z
+- Aprobación vigente: `APROBADO PC-02` (2026-08-31T18:54:54Z); higiene Git y cierre autorizados (2026-08-31T19:10:44Z)
 
 ## Objetivo
 
@@ -60,10 +60,10 @@ Crear el primer servidor Node.js local de Pi-Coach: inicia en `127.0.0.1`, carga
 
 ## Implementación autorizada
 
-- Archivos permitidos: `package.json`, `package-lock.json`, `src/server.mjs` y `.pi/coordination/tasks/PC-00/{task-plan.md,ledger.md}`, `.pi/coordination/tasks/PC-02/{task-plan.md,ledger.md}`. Git puede modificar `.git/`.
+- Archivos permitidos: `package.json`, `package-lock.json`, `src/server.mjs`, `.gitignore` y `.pi/coordination/tasks/PC-00/{task-plan.md,ledger.md}`, `.pi/coordination/tasks/PC-01/{task-plan.md,ledger.md}`, `.pi/coordination/tasks/PC-02/{task-plan.md,ledger.md}`. Se autoriza retirar el archivo local sin seguimiento `NUL`; Git puede modificar `.git/`.
 - Dependencias autorizadas: `@earendil-works/pi-coding-agent@0.84.4` únicamente.
 - Archivos o rutas expresamente protegidos: `auth.json`, secretos, variables sensibles, `.vscode/`, `AGENTS.md`, `.pi/` fuera de coordinación y contenido remoto previo.
-- Cambios explícitamente no permitidos: Cualquier otra dependencia, framework web, login HTTP, cambios a credenciales, mensajes al modelo, persistencia, push forzado, rebase/reset destructivo o edición de rutas no autorizadas.
+- Cambios explícitamente no permitidos: Cualquier otra dependencia, framework web, login HTTP, cambios a credenciales, mensajes al modelo, persistencia, push forzado, rebase/reset destructivo o edición de rutas no autorizadas. La única regla nueva de `.gitignore` autorizada es `node_modules/`.
 
 ## Criterios de finalización
 
@@ -77,17 +77,17 @@ Crear el primer servidor Node.js local de Pi-Coach: inicia en `127.0.0.1`, carga
 
 - Iteración de QA actual: `0`
 - Ciclo técnico actual: `1`
-- Ronda actual: `0`
-- Contexto vigente del ciclo: Primer slice de producto aprobado; Cod implementa ronda 0 y entrega directamente a Rev. No hay API de mensajes aún.
-- Riesgos a comprobar: fuga de secretos, escucha no local, descubrimiento de recursos de desarrollo, ID SDK expuesto, dependencia no autorizada, endpoint que acepte administración/modelo desde HTTP.
+- Ronda actual: `1`
+- Contexto vigente del ciclo: Se autorizó higiene Git tras revisión: añadir `node_modules/` a `.gitignore`, retirar `NUL` e incluir registros pendientes PC-01/PC-02 en el cierre. Cod entrega a Rev en ronda 1.
+- Riesgos a comprobar: fuga de secretos, escucha no local, descubrimiento de recursos de desarrollo, ID SDK expuesto, dependencia no autorizada, endpoint que acepte administración/modelo desde HTTP; `node_modules/` y archivo local inesperado `NUL` sin seguimiento.
 - Comandos de comprobación estática: `npm test` si se define; `node --check src/server.mjs`; inspección de `npm ls @earendil-works/pi-coding-agent`; comprobaciones de Git sin secretos.
 
 ## QA humana desde PowerShell
 
 - Comando: En una consola, `npm start`. En otra: `Invoke-RestMethod http://127.0.0.1:3000/health; Invoke-RestMethod -Method Post -Uri http://127.0.0.1:3000/v1/sessions -ContentType 'application/json' -Body '{}'`.
 - Resultado esperado: salud `ok` y un `sessionId` no vacío, sin credenciales ni ID interno de Pi. No se espera todavía respuesta conversacional.
-- Resultado observado: Pendiente.
-- Estado: pendiente
+- Resultado observado: Pendiente de ejecución por la persona responsable.
+- Estado: `QA_PENDING`
 
 ## Documentación
 

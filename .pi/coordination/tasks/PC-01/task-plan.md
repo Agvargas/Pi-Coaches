@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `IMPLEMENTING`
-- Persona responsable: aprobó `PC-01`
+- Estado actual: `DONE`
+- Persona responsable: aprobó y validó QA de `PC-01`
 - Creado: 2026-08-31T17:58:57Z
-- Última actualización: 2026-08-31T18:07:40Z
-- Aprobación vigente: `APROBADO PC-01` (2026-08-31T18:05:12Z); HTTPS autorizado el 2026-08-31T18:07:40Z
+- Última actualización: 2026-08-31T18:11:59Z
+- Aprobación vigente: `APROBADO PC-01` (2026-08-31T18:05:12Z); HTTPS autorizado el 2026-08-31T18:07:40Z; `QA OK PC-01` (2026-08-31T18:11:59Z)
 
 ## Objetivo
 
@@ -78,7 +78,7 @@ Publicar en el remoto GitLab proporcionado el estado actual del directorio local
 - Iteración de QA actual: `0`
 - Ciclo técnico actual: `1`
 - Ronda actual: `0`
-- Contexto vigente del ciclo: HTTPS autorizado tras el bloqueo de SSH; Cod debe cambiar `origin` al URL HTTPS, volver a comprobar el remoto y continuar solo si no hay bloqueos.
+- Contexto vigente del ciclo: Rev aprobó la integración HTTPS: `master` y `origin/master` coinciden en `e2dad6b798ed039e67fdb8add2159206c12de9c6`; pendiente de QA humana.
 - Riesgos a comprobar: acceso de red/SSH al puerto 22 no disponible; historia remota no relacionada; remoto con más contenido que el `README`; una regla de negación de `.gitignore` que no re-incluya correctamente `.pi/coordination/`.
 - Comandos de comprobación estática: `git status --short --branch`, `git remote -v`, `git log --oneline --decorate -n 5`, `git ls-remote --heads origin` y revisión de reglas `.gitignore`; no se imprimirán datos sensibles.
 
@@ -86,10 +86,10 @@ Publicar en el remoto GitLab proporcionado el estado actual del directorio local
 
 - Comando: `git -C 'C:\Users\andgu\OneDrive\Documents\Pi-Coach' status --short --branch; git -C 'C:\Users\andgu\OneDrive\Documents\Pi-Coach' log --oneline --decorate -n 3`
 - Resultado esperado: Rama vinculada a `origin`, árbol de trabajo limpio tras el commit y el historial contiene el `README` remoto y el commit local.
-- Resultado observado: Pendiente.
-- Estado: pendiente
+- Resultado observado: `QA OK PC-01` comunicado por la persona responsable.
+- Estado: aprobada
 
 ## Documentación
 
 - Archivos autorizados: No aplica.
-- Contenido que solo podrá documentarse después de `QA OK`: No aplica.
+- Contenido que solo podrá documentarse después de `QA OK`: No aplica; no se despachó a Doc porque no había documentación autorizada.
