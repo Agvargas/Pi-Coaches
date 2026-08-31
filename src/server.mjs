@@ -104,7 +104,7 @@ async function createSession() {
     noTools: "all",
   });
   const sessionId = randomUUID();
-  sessions.set(sessionId, session);
+  sessions.set(sessionId, { session, busy: false });
   return sessionId;
 }
 
@@ -119,7 +119,36 @@ const server = createServer(async (request, response) => {
     return;
   }
 
-  if (request.method === "POST" && request.url === "/v1/sessions") {
+  if (request.method === "POST") {
+    if (request.url === "/v1/sessions") {
+      let body;
+      try {
+        body = await readJsonBody(request);
+      } catch {
+        sendJson(response, 400, { error: "invalid_request" });
+        return;
+      }
+
+      if (!isEmptyObject(body)) {
+        sendJson(response, 400, { error: "invalid_request" });
+        return;
+      }
+
+      try {
+        const sessionId = await createSession();
+        sendJson(response, 201, { sessionId });
+      } catch {
+        sendJson(response, 503, { error: "service_unavailable" });
+      }
+      return;
+    }
+
+    const messageRoute = /^\/v1\/sessions\/([^/]+)\/messages$/.exec(request.url ?? "");
+    if (!messageRoute) {
+      sendJson(response, 400, { error: "invalid_request" });
+      return;
+    }
+
     let body;
     try {
       body = await readJsonBody(request);
@@ -128,16 +157,43 @@ const server = createServer(async (request, response) => {
       return;
     }
 
-    if (!isEmptyObject(body)) {
+    if (
+      body === null
+      || typeof body !== "object"
+      || Array.isArray(body)
+      || Object.keys(body).length !== 1
+      || typeof body.message !== "string"
+      || body.message.length < 1
+      || body.message.length > 4_000
+    ) {
       sendJson(response, 400, { error: "invalid_request" });
       return;
     }
 
+    const sessionId = messageRoute[1];
+    const sessionRecord = sessions.get(sessionId);
+    if (!sessionRecord) {
+      sendJson(response, 404, { error: "session_not_found" });
+      return;
+    }
+
+    if (sessionRecord.busy) {
+      sendJson(response, 409, { error: "session_busy" });
+      return;
+    }
+
+    sessionRecord.busy = true;
     try {
-      const sessionId = await createSession();
-      sendJson(response, 201, { sessionId });
+      await sessionRecord.session.prompt(body.message);
+      const reply = sessionRecord.session.getLastAssistantText();
+      if (typeof reply !== "string" || reply.length === 0) {
+        throw new Error("empty_reply");
+      }
+      sendJson(response, 200, { sessionId, reply });
     } catch {
-      sendJson(response, 503, { error: "service_unavailable" });
+      sendJson(response, 502, { error: "coach_unavailable" });
+    } finally {
+      sessionRecord.busy = false;
     }
     return;
   }
@@ -146,7 +202,7 @@ const server = createServer(async (request, response) => {
 });
 
 async function shutdown() {
-  for (const session of sessions.values()) {
+  for (const { session } of sessions.values()) {
     session.dispose();
   }
   sessions.clear();

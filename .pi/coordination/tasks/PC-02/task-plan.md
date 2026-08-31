@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `IMPLEMENTING`
-- Persona responsable: aprobó `PC-02`
+- Estado actual: `DONE`
+- Persona responsable: aprobó y validó QA de `PC-02`
 - Creado: 2026-08-31T18:17:23Z
-- Última actualización: 2026-08-31T19:10:44Z
-- Aprobación vigente: `APROBADO PC-02` (2026-08-31T18:54:54Z); higiene Git y cierre autorizados (2026-08-31T19:10:44Z)
+- Última actualización: 2026-08-31T19:18:18Z
+- Aprobación vigente: `APROBADO PC-02` (2026-08-31T18:54:54Z); higiene Git aprobada por Rev en ronda 1; `QA OK PC-02` (2026-08-31T19:18:18Z)
 
 ## Objetivo
 
@@ -78,18 +78,18 @@ Crear el primer servidor Node.js local de Pi-Coach: inicia en `127.0.0.1`, carga
 - Iteración de QA actual: `0`
 - Ciclo técnico actual: `1`
 - Ronda actual: `1`
-- Contexto vigente del ciclo: Se autorizó higiene Git tras revisión: añadir `node_modules/` a `.gitignore`, retirar `NUL` e incluir registros pendientes PC-01/PC-02 en el cierre. Cod entrega a Rev en ronda 1.
-- Riesgos a comprobar: fuga de secretos, escucha no local, descubrimiento de recursos de desarrollo, ID SDK expuesto, dependencia no autorizada, endpoint que acepte administración/modelo desde HTTP; `node_modules/` y archivo local inesperado `NUL` sin seguimiento.
+- Contexto vigente del ciclo: Rev aprobó ronda 1; commit `0b9d36d6f7d4570690e1a486411ca604ee7544c4` está en `origin/master`, `node_modules/` está ignorado y `NUL` fue retirado. QA humana pendiente.
+- Riesgos a comprobar: fuga de secretos, escucha no local, descubrimiento de recursos de desarrollo, ID SDK expuesto, dependencia no autorizada, endpoint que acepte administración/modelo desde HTTP. La higiene Git de `node_modules/` y `NUL` fue aprobada en ronda 1.
 - Comandos de comprobación estática: `npm test` si se define; `node --check src/server.mjs`; inspección de `npm ls @earendil-works/pi-coding-agent`; comprobaciones de Git sin secretos.
 
 ## QA humana desde PowerShell
 
 - Comando: En una consola, `npm start`. En otra: `Invoke-RestMethod http://127.0.0.1:3000/health; Invoke-RestMethod -Method Post -Uri http://127.0.0.1:3000/v1/sessions -ContentType 'application/json' -Body '{}'`.
 - Resultado esperado: salud `ok` y un `sessionId` no vacío, sin credenciales ni ID interno de Pi. No se espera todavía respuesta conversacional.
-- Resultado observado: Pendiente de ejecución por la persona responsable.
-- Estado: `QA_PENDING`
+- Resultado observado: `QA OK PC-02` comunicado por la persona responsable.
+- Estado: aprobada
 
 ## Documentación
 
 - Archivos autorizados: Ninguno.
-- Contenido que solo podrá documentarse después de `QA OK`: No aplica; no hay documentación autorizada en PC-02.
+- Contenido que solo podrá documentarse después de `QA OK`: No aplica; no se despachó a Doc porque no había documentación autorizada.
