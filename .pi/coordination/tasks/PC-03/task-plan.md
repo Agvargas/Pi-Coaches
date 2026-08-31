@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `IMPLEMENTING`
-- Persona responsable: aprobó `PC-03`
+- Estado actual: `DONE`
+- Persona responsable: aprobó y validó QA de `PC-03`
 - Creado: 2026-08-31T19:20:57Z
-- Última actualización: 2026-08-31T19:22:44Z
-- Aprobación vigente: `APROBADO PC-03` (2026-08-31T19:22:44Z)
+- Última actualización: 2026-08-31T19:49:00Z
+- Aprobación vigente: `APROBADO PC-03` (2026-08-31T19:22:44Z); `QA OK PC-03` (2026-08-31T19:49:00Z)
 
 ## Objetivo
 
@@ -73,7 +73,7 @@ Añadir una conversación Coach real no streaming: enviar un mensaje a una sesi�
 - Iteración de QA actual: `0`
 - Ciclo técnico actual: `1`
 - Ronda actual: `0`
-- Contexto vigente del ciclo: PC-03 aprobado; Cod implementa solo mensaje/respuesta no streaming y entrega a Rev en ronda 0.
+- Contexto vigente del ciclo: Rev aprobó QA 0/ronda 0; commit `a753ec4a0085b8cf5a5f3133f605858eb155600c` está en `origin/master`. QA humana debe ejecutar la primera llamada real.
 - Riesgos a comprobar: llamada concurrente, ID desconocido, fuga de detalles SDK, llamada sobre sesión inexistente, falta de respuesta y consumo de cuota.
 - Comandos de comprobación estática: `node --check src/server.mjs`, `npm ls @earendil-works/pi-coding-agent`, comprobaciones HTTP locales de validación sin prompt y Git sin secretos.
 
@@ -81,10 +81,10 @@ Añadir una conversación Coach real no streaming: enviar un mensaje a una sesi�
 
 - Comando: Con `npm start` en otra consola: `$s = Invoke-RestMethod -Method Post -Uri http://127.0.0.1:3000/v1/sessions -ContentType 'application/json' -Body '{}'; Invoke-RestMethod -Method Post -Uri ("http://127.0.0.1:3000/v1/sessions/$($s.sessionId)/messages") -ContentType 'application/json' -Body (@{ message = 'Hola. Ayúdame a definir un próximo paso sencillo.' } | ConvertTo-Json)`.
 - Resultado esperado: objeto con el mismo `sessionId` opaco y `reply` textual no vacío. Esta prueba hace una llamada real al proveedor y puede consumir cuota.
-- Resultado observado: Pendiente.
-- Estado: pendiente
+- Resultado observado: `QA OK PC-03` comunicado por la persona responsable.
+- Estado: aprobada
 
 ## Documentación
 
 - Archivos autorizados: Pendiente de decisión posterior a `QA OK`.
-- Contenido que solo podrá documentarse después de `QA OK`: Inicio local, creación de sesión, envío de mensaje, errores y límites confirmados.
+- Contenido que solo podrá documentarse después de `QA OK`: Inicio local, creación de sesión, envío de mensaje, errores y límites confirmados. No se despachó a Doc porque no había archivos de documentación autorizados.
