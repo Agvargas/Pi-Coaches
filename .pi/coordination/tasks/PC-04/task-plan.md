@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `DOCUMENTING`
-- Persona responsable: aprobó y validó QA de `PC-04`
+- Estado actual: `DONE`
+- Persona responsable: aprobó, validó QA y aprobó documentación de `PC-04`
 - Creado: 2026-08-31T19:49:00Z
-- Última actualización: 2026-08-31T20:09:01Z
-- Aprobación vigente: `APROBADO PC-04` (2026-08-31T19:54:34Z); `QA OK PC-04` (2026-08-31T20:09:01Z)
+- Última actualización: 2026-08-31T20:15:25Z
+- Aprobación vigente: `APROBADO PC-04` (2026-08-31T19:54:34Z); `QA OK PC-04` (2026-08-31T20:09:01Z); README aprobado (2026-08-31T20:15:25Z)
 
 ## Objetivo
 

@@ -24,6 +24,7 @@ Terminales comprobadas con `link_list` el 2026-08-31T19:54:34Z antes del despach
 | 2026-08-31T19:58:24Z | QA_PENDING | Rev → Orc | `APPROVE` recibido para QA 0/ronda 0; commit `e41f9cf8082807969cdc1b6b09a9b26bbf5335de` coincide con `origin/master`. | Solicitar QA humana interactiva. |
 | 2026-08-31T20:09:01Z | DOCUMENTING | Persona responsable → Orc → Doc | `QA OK PC-04` recibido; README autorizado y Doc despachado. | Esperar `DONE` de Doc. |
 | 2026-08-31T20:15:25Z | DOCUMENTING | Doc → Orc | `DONE`: README actualizado solo con uso confirmado; persona responsable aprueba y autoriza commit/push dentro de PC-04. | Confirmar y enviar README y coordinación autorizada sin forzar. |
+| 2026-08-31T20:15:25Z | DONE | Orc | Commit `f95fe4c8640dd9a102988f6e7b269817827b76f9` publicó README y coordinación; cierre definitivo registrado. | Enviar commit de cierre de coordinación sin cambios de producto. |
 
 ## Decisiones
 
@@ -54,5 +55,5 @@ Terminales comprobadas con `link_list` el 2026-08-31T19:54:34Z antes del despach
 
 - Documentación enviada a Doc: Sí, 2026-08-31T20:09:01Z; solo `README.md`.
 - Confirmación de documentación: `DONE` de Doc recibido; README aprobado por la persona responsable el 2026-08-31T20:15:25Z.
-- Estado final: pendiente de commit/push de cierre.
+- Estado final: DONE (2026-08-31T20:15:25Z); README publicado en `f95fe4c8640dd9a102988f6e7b269817827b76f9`.
 - Riesgos residuales: mensajes consumen cuota; sesión no persistente; servidor se inicia manualmente; cuenta independiente fuera de alcance.
