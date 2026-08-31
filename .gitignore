@@ -1,0 +1,5 @@
+.pi/*
+!.pi/coordination/
+!.pi/coordination/**
+.vscode/
+AGENTS.md
