@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `IMPLEMENTING`
-- Persona responsable: aprobó `PC-04`
+- Estado actual: `DOCUMENTING`
+- Persona responsable: aprobó y validó QA de `PC-04`
 - Creado: 2026-08-31T19:49:00Z
-- Última actualización: 2026-08-31T19:54:34Z
-- Aprobación vigente: `APROBADO PC-04` (2026-08-31T19:54:34Z)
+- Última actualización: 2026-08-31T20:09:01Z
+- Aprobación vigente: `APROBADO PC-04` (2026-08-31T19:54:34Z); `QA OK PC-04` (2026-08-31T20:09:01Z)
 
 ## Objetivo
 
@@ -75,7 +75,7 @@ Ofrecer una forma práctica de conversar desde PowerShell: un script interactivo
 - Iteración de QA actual: `0`
 - Ciclo técnico actual: `1`
 - Ronda actual: `0`
-- Contexto vigente del ciclo: PC-04 aprobado; Cod implementa solo cliente PowerShell y entrega a Rev en ronda 0.
+- Contexto vigente del ciclo: Rev aprobó QA 0/ronda 0; commit `e41f9cf8082807969cdc1b6b09a9b26bbf5335de` está en `origin/master`. QA humana debe probar chat interactivo.
 - Riesgos a comprobar: truncar respuesta, mostrar secretos/detalles de error, no reutilizar sesión, manejar mal PowerShell/UTF-8, crear servidor adicional.
 - Comandos de comprobación estática: validación de sintaxis PowerShell sin ejecutar el bucle, revisión de rutas/secretos y Git sin secretos.
 
@@ -83,10 +83,10 @@ Ofrecer una forma práctica de conversar desde PowerShell: un script interactivo
 
 - Comando: Con `npm start` en una consola normal: `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\chat.ps1` en otra.
 - Resultado esperado: Muestra ayuda/inicio, permite enviar varios mensajes, imprime respuestas completas y `/salir` termina; puede consumir cuota.
-- Resultado observado: Pendiente.
-- Estado: pendiente
+- Resultado observado: `QA OK PC-04` comunicado por la persona responsable.
+- Estado: aprobada
 
 ## Documentación
 
-- Archivos autorizados: `README.md`, solo tras `QA OK` y solo por Doc.
+- Archivos autorizados: `README.md`, solo tras `QA OK` y solo por Doc; Doc despachado el 2026-08-31T20:09:01Z y entregó actualización confirmada el 2026-08-31T20:15:25Z.
 - Contenido que solo podrá documentarse después de `QA OK`: requisitos Node/Pi, inicio de servidor, comando del chat, comandos `/ayuda` y `/salir`, rutas actuales, límite de sesión en memoria, cuota y ausencia de interfaz web.
