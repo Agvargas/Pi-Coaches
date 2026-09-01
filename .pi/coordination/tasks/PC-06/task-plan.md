@@ -7,8 +7,8 @@
 - Estado actual: `REWORKING`
 - Persona responsable: aprobó `PC-06`
 - Creado: 2026-09-01T22:19:16Z
-- Última actualización: 2026-09-01T22:30:32Z
-- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); correcciones de Rev en ronda 1
+- Última actualización: 2026-09-01T22:45:47Z
+- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); situaciones originales exactas autorizadas; corrección en ronda 2
 
 ## Objetivo
 
@@ -76,8 +76,8 @@ Reemplazar el chat genérico por prácticas HEART en inglés: selección de situ
 
 ## Revisión técnica
 
-- Iteración QA: `0`; ciclo: `1`; ronda: `1`.
-- Contexto vigente: Rev solicita 413 correcto por límite de mensaje y cleanup seguro de sesiones pendientes durante shutdown; Cod corrige y vuelve a entregar a Rev.
+- Iteración QA: `0`; ciclo: `1`; ronda: `2`.
+- Contexto vigente: La persona responsable autorizó sustituir el catálogo por las tres situaciones originales exactas; Cod corrige contenido solamente y entrega a Rev.
 - Riesgos: mezcla de prácticas, prompt injection, bloqueo excesivo, timeout, doble operación, salida cruda, coste y reemplazo incompleto de API genérica.
 - Checks: `node --check src/server.mjs`, parser PowerShell, `npm ls`, Git; no llamada real en checks técnicos.
 
