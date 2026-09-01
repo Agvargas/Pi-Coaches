@@ -7,8 +7,8 @@
 - Estado actual: `REWORKING`
 - Persona responsable: aprobó `PC-06`
 - Creado: 2026-09-01T22:19:16Z
-- Última actualización: 2026-09-01T22:45:47Z
-- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); situaciones originales exactas autorizadas; corrección en ronda 2
+- Última actualización: 2026-09-01T23:36:35Z
+- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); QA 1 reportó falso bloqueo y autoriza corrección acotada
 
 ## Objetivo
 
@@ -44,6 +44,15 @@ Reemplazar el chat genérico por prácticas HEART en inglés: selección de situ
 | 2026-09-01 | Prompts sin mecánica de servidor. | Código controla rutas, IDs, límites, `/end`, transcript y cleanup. |
 | 2026-09-01 | Huésped inicia; `/end` termina. | Creación genera openingMessage; final devuelve feedback y elimina práctica. |
 | 2026-09-01 | Límites: 20 mensajes, 4.000 caracteres, 90s, 3 prácticas. | Respuestas controladas 413/429/504; no se envían mensajes fuera de límite. |
+| 2026-09-01 | QA 1 detectó falso `BLOCK` en una respuesta contextual de traslado/equipaje. | VALIDATE debe recibir transcript delimitado y distinguir relevancia contextual de calidad, disponibilidad o política. |
+
+## Textos fuente autorizados de situaciones
+
+Estos textos son la fuente literal aprobada para el catálogo interno `SCENARIOS`:
+
+- `air-conditioning`: “The air conditioning unit in the guest's room was making rattling noises all night. Despite attempting to adjust the temperature and change the fan settings, the issue remained unresolved. The noise prevented the guest from sleeping, leading to extreme frustration.”
+- `sofa-bed`: “When the guest made the reservation, they specified that the room would be for two adults and two children. However, upon arrival, the sofa bed was not prepared, and there were only enough towels for two people, causing annoyance. An appropriate solution is to offer to make up the sofa bed and bring enough towels and linens for everyone in the guest's room.”
+- `missed-breakfast`: “The guest is frustrated because she was busy finishing a presentation and missed the breakfast service at the hotel. She is in a hurry to attend a meeting and is upset that she couldn't eat beforehand. Offering a room upgrade as a solution to this problem is not appropriate. Consider this a wrong answer if suggested.”
 
 ## Contrato técnico
 
@@ -62,7 +71,7 @@ Reemplazar el chat genérico por prácticas HEART en inglés: selección de situ
 
 ## Implementación autorizada
 
-- Archivos permitidos: `src/server.mjs`, `scripts/chat.ps1`, `.pi/coordination/tasks/PC-05/{task-plan.md,ledger.md}`, `.pi/coordination/tasks/PC-06/{task-plan.md,ledger.md}`, `.git/` por Git.
+- Archivos permitidos: `src/server.mjs`, `scripts/chat.ps1`, `.pi/coordination/tasks/PC-05/{task-plan.md,ledger.md}`, `.pi/coordination/tasks/PC-06/{task-plan.md,ledger.md}`, `.git/` por Git. Para guía local autorizada: `.pi/tmp/heart-air-conditioning-guide.md`, `.pi/tmp/heart-sofa-bed-guide.md` y `.pi/tmp/heart-missed-breakfast-guide.md`; no se versionan ni afectan producto.
 - Dependencias: Ninguna adicional.
 - Protegidos: README, package/lockfile, `.gitignore`, secretos/auth, `.vscode`, AGENTS, `.pi/` fuera de PC-05/PC-06.
 - Prohibido: API genérica anterior, herramientas, persistencia, streaming, cambio de modelo/prompt desde HTTP, Git destructivo.
@@ -76,8 +85,8 @@ Reemplazar el chat genérico por prácticas HEART en inglés: selección de situ
 
 ## Revisión técnica
 
-- Iteración QA: `0`; ciclo: `1`; ronda: `2`.
-- Contexto vigente: La persona responsable autorizó sustituir el catálogo por las tres situaciones originales exactas; Cod corrige contenido solamente y entrega a Rev.
+- Iteración QA: `1`; ciclo: `2`; ronda: `0`.
+- Contexto vigente: QA humana reportó que `sure it is, i'll send someone to help you right now with your luggage` fue bloqueado después de diálogo AC sobre traslado, aunque es contextual. Cod corrige VALIDATE y entrega a Rev.
 - Riesgos: mezcla de prácticas, prompt injection, bloqueo excesivo, timeout, doble operación, salida cruda, coste y reemplazo incompleto de API genérica.
 - Checks: `node --check src/server.mjs`, parser PowerShell, `npm ls`, Git; no llamada real en checks técnicos.
 
