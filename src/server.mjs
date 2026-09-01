@@ -33,7 +33,9 @@ class BodyTooLargeError extends Error {}
 class PromptTimeoutError extends Error {}
 
 const trainings = new Map();
+const pendingCreations = new Set();
 let pendingTrainings = 0;
+let shuttingDown = false;
 let service;
 let initializationError;
 
@@ -63,12 +65,6 @@ function isExactObject(value, keys) {
     && !Array.isArray(value)
     && Object.keys(value).length === keys.length
     && keys.every((key) => Object.hasOwn(value, key));
-}
-
-function isValidMessage(value) {
-  return typeof value === "string"
-    && value.length >= 1
-    && value.length <= MAX_MESSAGE_CHARACTERS;
 }
 
 function createResourceLoader(systemPrompt, settingsManager) {
@@ -161,24 +157,44 @@ function sendPromptError(response, error) {
 }
 
 async function createTraining(scenarioId) {
+  if (shuttingDown) {
+    const error = new Error("shutting_down");
+    error.code = "shutting_down";
+    throw error;
+  }
   if (trainings.size + pendingTrainings >= MAX_ACTIVE_TRAININGS) {
     const error = new Error("training_limit");
     error.code = "training_limit";
     throw error;
   }
   pendingTrainings += 1;
-  let guestSession;
-  let evaluatorSession;
+  const pendingCreation = { guestSession: undefined, evaluatorSession: undefined };
+  pendingCreations.add(pendingCreation);
   try {
     const scenario = SCENARIOS[scenarioId];
-    guestSession = await createRoleSession(`${GUEST_PROMPT}\n\nAssigned situation (trusted exercise data):\n${scenario}`, "low");
-    evaluatorSession = await createRoleSession(EVALUATOR_PROMPT, "medium");
-    await promptWithTimeout(guestSession, "Begin the role-play by presenting your concern to the Team Member.");
-    const openingMessage = getReply(guestSession);
+    pendingCreation.guestSession = await createRoleSession(`${GUEST_PROMPT}\n\nAssigned situation (trusted exercise data):\n${scenario}`, "low");
+    if (shuttingDown) {
+      const error = new Error("shutting_down");
+      error.code = "shutting_down";
+      throw error;
+    }
+    pendingCreation.evaluatorSession = await createRoleSession(EVALUATOR_PROMPT, "medium");
+    if (shuttingDown) {
+      const error = new Error("shutting_down");
+      error.code = "shutting_down";
+      throw error;
+    }
+    await promptWithTimeout(pendingCreation.guestSession, "Begin the role-play by presenting your concern to the Team Member.");
+    const openingMessage = getReply(pendingCreation.guestSession);
+    if (shuttingDown) {
+      const error = new Error("shutting_down");
+      error.code = "shutting_down";
+      throw error;
+    }
     const trainingId = randomUUID();
     trainings.set(trainingId, {
-      guestSession,
-      evaluatorSession,
+      guestSession: pendingCreation.guestSession,
+      evaluatorSession: pendingCreation.evaluatorSession,
       scenarioId,
       scenario,
       transcript: [{ speaker: "Guest", text: openingMessage }],
@@ -188,10 +204,11 @@ async function createTraining(scenarioId) {
     });
     return { trainingId, openingMessage };
   } catch (error) {
-    guestSession?.dispose();
-    evaluatorSession?.dispose();
+    pendingCreation.guestSession?.dispose();
+    pendingCreation.evaluatorSession?.dispose();
     throw error;
   } finally {
+    pendingCreations.delete(pendingCreation);
     pendingTrainings -= 1;
   }
 }
@@ -227,6 +244,11 @@ async function handleEnd(training) {
 }
 
 const server = createServer(async (request, response) => {
+  if (shuttingDown) {
+    sendJson(response, 503, { error: "service_unavailable" });
+    return;
+  }
+
   if (request.method === "GET" && request.url === "/health") {
     await initialization;
     if (initializationError) sendJson(response, 503, { error: "service_unavailable" });
@@ -257,6 +279,7 @@ const server = createServer(async (request, response) => {
       sendJson(response, 201, result);
     } catch (error) {
       if (error.code === "training_limit") sendJson(response, 429, { error: "too_many_trainings" });
+      else if (error.code === "shutting_down") sendJson(response, 503, { error: "service_unavailable" });
       else if (error instanceof PromptTimeoutError) sendPromptError(response, error);
       else if (initializationError) sendJson(response, 503, { error: "service_unavailable" });
       else sendPromptError(response, error);
@@ -271,6 +294,19 @@ const server = createServer(async (request, response) => {
     sendJson(response, 400, { error: "invalid_request" });
     return;
   }
+  if (messageRoute && (!isExactObject(body, ["message"]) || typeof body.message !== "string" || body.message.length < 1)) {
+    sendJson(response, 400, { error: "invalid_request" });
+    return;
+  }
+  if (messageRoute && body.message.length > MAX_MESSAGE_CHARACTERS) {
+    sendJson(response, 413, { error: "limit_exceeded" });
+    return;
+  }
+  if (endRoute && !isExactObject(body, [])) {
+    sendJson(response, 400, { error: "invalid_request" });
+    return;
+  }
+
   const training = trainings.get(route[1]);
   if (!training) {
     sendJson(response, 404, { error: "training_not_found" });
@@ -278,15 +314,6 @@ const server = createServer(async (request, response) => {
   }
   if (training.lock || training.ending) {
     sendJson(response, 409, { error: "training_busy" });
-    return;
-  }
-
-  if (messageRoute && (!isExactObject(body, ["message"]) || !isValidMessage(body.message))) {
-    sendJson(response, 400, { error: "invalid_request" });
-    return;
-  }
-  if (endRoute && !isExactObject(body, [])) {
-    sendJson(response, 400, { error: "invalid_request" });
     return;
   }
 
@@ -313,13 +340,20 @@ const server = createServer(async (request, response) => {
 });
 
 async function shutdown() {
-  for (const training of trainings.values()) {
-    await training.guestSession.abort().catch(() => {});
-    await training.evaluatorSession.abort().catch(() => {});
-    disposeTraining(training);
+  if (shuttingDown) return;
+  shuttingDown = true;
+  server.close();
+  const sessionsToDispose = [
+    ...trainings.values(),
+    ...pendingCreations,
+  ];
+  for (const training of sessionsToDispose) {
+    await training.guestSession?.abort().catch(() => {});
+    await training.evaluatorSession?.abort().catch(() => {});
+    training.guestSession?.dispose();
+    training.evaluatorSession?.dispose();
   }
   trainings.clear();
-  server.close();
 }
 
 process.once("SIGINT", shutdown);
