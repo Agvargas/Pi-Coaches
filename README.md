@@ -1,50 +1,50 @@
 # Pi-Coach
 
-Servidor local de práctica HEART. Se ejecuta en `127.0.0.1:3000` y se usa desde un chat interactivo de PowerShell. El servidor crea dos sesiones internas aisladas por práctica: Guest (nivel `low`) y Evaluator (nivel `medium`).
+Local HEART practice server. It runs on `127.0.0.1:3000` and is used through an interactive PowerShell chat. The server creates two isolated internal sessions per practice: Guest (low level) and Evaluator (medium level).
 
-## Requisitos e instalación
+## Requirements and installation
 
-- Node.js 24 (comprobado).
-- Autenticación local de Pi configurada para el SDK.
-- Acceso de red al proveedor; cada llamada al modelo puede consumir cuota.
+- Node.js 24 (verified).
+- Local Pi authentication configured for the SDK.
+- Network access to the provider; each model call may consume quota.
 
-En la carpeta del proyecto:
+From the project directory:
 
 ```powershell
 npm ci
 npm start
 ```
 
-Deja el servidor ejecutándose en esa consola. En otra, inicia el chat:
+Leave the server running in that console. In another console, start the chat:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\chat.ps1
 ```
 
-El script presenta estas situaciones: `air-conditioning`, `sofa-bed` y `missed-breakfast`. Guest inicia la práctica. Escribe `/help` para mostrar la ayuda o `/end` para finalizar y ver el feedback HEART.
+The script presents these scenarios: `air-conditioning`, `sofa-bed`, and `missed-breakfast`. Guest starts the practice. Type `/help` to show help or `/end` to finish and view HEART feedback.
 
-## Flujo de práctica
+## Practice flow
 
-El Evaluator valida el contexto mientras conversas. Solo bloquea mensajes claramente fuera de contexto (por ejemplo, pizza o fútbol); respuestas relevantes, incluso si son deficientes, se aceptan y se evalúan al finalizar. Para `missed-breakfast`, no se deben prometer free nights, giveaways, comida cooked-to-order o entregada en la habitación, descuentos superiores al 50% ni un room upgrade.
+The Evaluator checks context while you converse. It blocks only clearly out-of-context messages (for example, pizza or football); relevant responses, even poor ones, are accepted and evaluated at the end. For `missed-breakfast`, do not promise free nights, giveaways, cooked-to-order food, food delivered to the room, discounts above 50%, or a room upgrade.
 
-## API validada
+## Validated API
 
-Todas las rutas son locales y no requieren autenticación pública. Las entradas JSON deben coincidir exactamente con las indicadas.
+All routes are local and require no public authentication. JSON inputs must match the forms shown exactly.
 
-- `GET /health` → `200` con `{ "status": "ok" }`.
-- `POST /trainings` con `{ "scenarioId": "air-conditioning" }` (o `sofa-bed`/`missed-breakfast`) → `201` con `trainingId` y `openingMessage`.
-- `POST /trainings/:trainingId/messages` con `{ "message": "..." }` → respuesta `accepted` con una respuesta del Guest, o `blocked` con el mensaje fijo de bloqueo.
-- `POST /trainings/:trainingId/end` con `{}` → `200` con feedback HEART; la práctica finaliza y se elimina.
+- `GET /health` → `200` with `{ "status": "ok" }`.
+- `POST /trainings` with `{ "scenarioId": "air-conditioning" }` (or `sofa-bed`/`missed-breakfast`) → `201` with `trainingId` and `openingMessage`.
+- `POST /trainings/:trainingId/messages` with `{ "message": "..." }` → an `accepted` reply from Guest, or `blocked` with the fixed blocking message.
+- `POST /trainings/:trainingId/end` with `{}` → `200` with HEART feedback; the practice ends and is deleted.
 
-Errores públicos: `400` (entrada inválida), `404` (ruta o práctica inexistente), `409` (conflicto), `413` (mensaje demasiado grande), `429` (máximo de prácticas activas), `502` (fallo del proveedor), `503` (servidor no disponible) y `504` (tiempo agotado).
+Public errors: `400` (invalid input), `404` (missing route or practice), `409` (conflict), `413` (message too large), `429` (maximum active practices reached), `502` (provider failure), `503` (server unavailable), and `504` (timeout).
 
-## Límites y privacidad
+## Limits and privacy
 
-- Máximo 3 prácticas activas.
-- Máximo 20 mensajes del Team Member por práctica.
-- Cada mensaje admite hasta 4.000 caracteres.
-- Cada llamada al modelo tiene un límite de 90 segundos.
-- Las prácticas viven solo en memoria: se eliminan al finalizar y se pierden al reiniciar el servidor.
-- No hay tools, persistencia, interfaz web ni autenticación pública. El modelo interno está fijado a `openai-codex/gpt-5.6-terra`.
+- Maximum 3 active practices.
+- Maximum 20 Team Member messages per practice.
+- Each message may contain up to 4,000 characters.
+- Each model call has a 90-second limit.
+- Practices live only in memory: they are deleted when ended and lost when the server restarts.
+- There are no tools, persistence, web interface, or public authentication. The internal model is fixed to `openai-codex/gpt-5.6-terra`.
 
-Esta documentación refleja pruebas reales desde PowerShell. El uso depende de la red, del proveedor y de la cuota disponible; no es una configuración de producción.
+This documentation reflects real PowerShell testing. Operation depends on the network, provider, and available quota; this is not a production setup.
