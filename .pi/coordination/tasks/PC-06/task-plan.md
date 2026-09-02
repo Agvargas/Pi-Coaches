@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `REWORKING`
+- Estado actual: `COMPLETED`
 - Persona responsable: aprobó `PC-06`
 - Creado: 2026-09-01T22:19:16Z
-- Última actualización: 2026-09-01T23:36:35Z
-- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); QA 1 reportó falso bloqueo y autoriza corrección acotada
+- Última actualización: 2026-09-02T00:10:04Z
+- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); `QA OK PC-06` aceptado (2026-09-02T00:05:14Z); documentación completada y pendiente de publicación
 
 ## Objetivo
 
@@ -86,7 +86,7 @@ Estos textos son la fuente literal aprobada para el catálogo interno `SCENARIOS
 ## Revisión técnica
 
 - Iteración QA: `1`; ciclo: `2`; ronda: `0`.
-- Contexto vigente: QA humana reportó que `sure it is, i'll send someone to help you right now with your luggage` fue bloqueado después de diálogo AC sobre traslado, aunque es contextual. Cod corrige VALIDATE y entrega a Rev.
+- Contexto vigente: QA OK aceptado tras repetición real: continuación contextual accepted, pizza/fútbol blocked, `/end` con feedback y ID finalizado 404. Doc completó README; Orc publica el cierre.
 - Riesgos: mezcla de prácticas, prompt injection, bloqueo excesivo, timeout, doble operación, salida cruda, coste y reemplazo incompleto de API genérica.
 - Checks: `node --check src/server.mjs`, parser PowerShell, `npm ls`, Git; no llamada real en checks técnicos.
 

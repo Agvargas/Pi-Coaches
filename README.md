@@ -1,14 +1,12 @@
 # Pi-Coach
 
-Servidor local de conversaciones de Coach mediante la API de Pi. La interfaz validada actualmente es un chat interactivo de PowerShell.
+Servidor local de práctica HEART. Se ejecuta en `127.0.0.1:3000` y se usa desde un chat interactivo de PowerShell. El servidor crea dos sesiones internas aisladas por práctica: Guest (nivel `low`) y Evaluator (nivel `medium`).
 
-## Requisitos
+## Requisitos e instalación
 
 - Node.js 24 (comprobado).
-- Una autenticación local válida de Pi; el SDK la utiliza para conectarse al proveedor.
-- Acceso de red al proveedor. La cuenta local de Pi es solo para pruebas y cada mensaje puede consumir cuota.
-
-## Instalación y arranque
+- Autenticación local de Pi configurada para el SDK.
+- Acceso de red al proveedor; cada llamada al modelo puede consumir cuota.
 
 En la carpeta del proyecto:
 
@@ -17,27 +15,36 @@ npm ci
 npm start
 ```
 
-Mantén el servidor iniciado en esa consola. En otra consola, ejecuta el chat:
+Deja el servidor ejecutándose en esa consola. En otra, inicia el chat:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\chat.ps1
 ```
 
-El chat crea una sesión y permite enviar mensajes. Escribe `/ayuda` para ver la ayuda y `/salir` para terminar.
+El script presenta estas situaciones: `air-conditioning`, `sofa-bed` y `missed-breakfast`. Guest inicia la práctica. Escribe `/help` para mostrar la ayuda o `/end` para finalizar y ver el feedback HEART.
+
+## Flujo de práctica
+
+El Evaluator valida el contexto mientras conversas. Solo bloquea mensajes claramente fuera de contexto (por ejemplo, pizza o fútbol); respuestas relevantes, incluso si son deficientes, se aceptan y se evalúan al finalizar. Para `missed-breakfast`, no se deben prometer free nights, giveaways, comida cooked-to-order o entregada en la habitación, descuentos superiores al 50% ni un room upgrade.
 
 ## API validada
 
-El servidor escucha únicamente en loopback.
+Todas las rutas son locales y no requieren autenticación pública. Las entradas JSON deben coincidir exactamente con las indicadas.
 
-- `GET /health` — devuelve `200` cuando el servidor está disponible.
-- `POST /v1/sessions` — crea una sesión y devuelve `201` con un `sessionId` opaco.
-- `POST /v1/sessions/:sessionId/messages` — recibe un mensaje y devuelve `200` con un `reply`.
+- `GET /health` → `200` con `{ "status": "ok" }`.
+- `POST /trainings` con `{ "scenarioId": "air-conditioning" }` (o `sofa-bed`/`missed-breakfast`) → `201` con `trainingId` y `openingMessage`.
+- `POST /trainings/:trainingId/messages` con `{ "message": "..." }` → respuesta `accepted` con una respuesta del Guest, o `blocked` con el mensaje fijo de bloqueo.
+- `POST /trainings/:trainingId/end` con `{}` → `200` con feedback HEART; la práctica finaliza y se elimina.
 
-Los errores confirmados son `400` para entradas inválidas, `404` para una sesión o ruta inexistente, `409` para un conflicto de sesión y `502` cuando falla el proveedor.
+Errores públicos: `400` (entrada inválida), `404` (ruta o práctica inexistente), `409` (conflicto), `413` (mensaje demasiado grande), `429` (máximo de prácticas activas), `502` (fallo del proveedor), `503` (servidor no disponible) y `504` (tiempo agotado).
 
-## Límites actuales
+## Límites y privacidad
 
-- Las sesiones se mantienen solo en memoria y se pierden al reiniciar el servidor.
-- No hay interfaz web, persistencia ni autenticación pública.
-- El funcionamiento depende de la red, del proveedor de Pi y de la cuota disponible.
-- Esta configuración está destinada a pruebas locales, no a producción.
+- Máximo 3 prácticas activas.
+- Máximo 20 mensajes del Team Member por práctica.
+- Cada mensaje admite hasta 4.000 caracteres.
+- Cada llamada al modelo tiene un límite de 90 segundos.
+- Las prácticas viven solo en memoria: se eliminan al finalizar y se pierden al reiniciar el servidor.
+- No hay tools, persistencia, interfaz web ni autenticación pública. El modelo interno está fijado a `openai-codex/gpt-5.6-terra`.
+
+Esta documentación refleja pruebas reales desde PowerShell. El uso depende de la red, del proveedor y de la cuota disponible; no es una configuración de producción.
