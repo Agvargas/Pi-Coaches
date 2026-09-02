@@ -8,7 +8,7 @@
 - Persona responsable: aprobó `PC-06`
 - Creado: 2026-09-01T22:19:16Z
 - Última actualización: 2026-09-02T00:10:04Z
-- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); `QA OK PC-06` aceptado (2026-09-02T00:05:14Z); documentación completada y pendiente de publicación
+- Aprobación vigente: `APROBADO PC-06` (2026-09-01T22:24:42Z); `QA OK PC-06` aceptado (2026-09-02T00:05:14Z); documentación publicada en `e9aaa9b`
 
 ## Objetivo
 
@@ -86,7 +86,7 @@ Estos textos son la fuente literal aprobada para el catálogo interno `SCENARIOS
 ## Revisión técnica
 
 - Iteración QA: `1`; ciclo: `2`; ronda: `0`.
-- Contexto vigente: QA OK aceptado tras repetición real: continuación contextual accepted, pizza/fútbol blocked, `/end` con feedback y ID finalizado 404. Doc completó README; Orc publica el cierre.
+- Contexto vigente: QA OK aceptado tras repetición real: continuación contextual accepted, pizza/fútbol blocked, `/end` con feedback y ID finalizado 404. README y registros publicados en `e9aaa9b`.
 - Riesgos: mezcla de prácticas, prompt injection, bloqueo excesivo, timeout, doble operación, salida cruda, coste y reemplazo incompleto de API genérica.
 - Checks: `node --check src/server.mjs`, parser PowerShell, `npm ls`, Git; no llamada real en checks técnicos.
 

@@ -36,6 +36,7 @@ Terminales comprobadas con `link_list` el 2026-09-01T22:24:42Z, 2026-09-01T22:45
 | 2026-09-02T00:05:14Z | QA_OK | Persona responsable → Orc | `QA OK PC-06` aceptado tras evidencia de continuación contextual accepted, contenido ajeno blocked, feedback `/end` e ID finalizado 404. | Despachar a Doc para README únicamente. |
 | 2026-09-02T00:05:14Z | DOCUMENTING | Orc → Doc | Documentación posterior a QA autorizada. | Esperar `DOC COMPLETE` de Doc. |
 | 2026-09-02T00:10:04Z | COMPLETED | Doc → Orc | `DOC COMPLETE`: README HEART actualizado; `git diff --check` OK; sin llamadas reales ni cambio de producto. | Publicar commit no forzado de README y registros PC-06. |
+| 2026-09-02T00:10:04Z | COMPLETED | Orc | Commit `e9aaa9b` (`docs: document HEART training workflow`) publicado no forzado en `origin/master`. | Cierre documentado. |
 
 ## Decisiones
 
