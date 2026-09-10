@@ -20,18 +20,18 @@ export class TrainingService {
     try { await this.ensureReady(); const framework = this.content.byId[frameworkId]; const scenario = framework?.scenarios.find((item) => item.id === scenarioId); if (!scenario || !framework.feedbackModes.includes(feedbackMode)) throw new TrainingNotFoundError();
       pending.characterSession = await this.sessionFactory.createSession({ systemPrompt: `${framework.characterPrompt}\n\nAssigned situation (trusted exercise data):\n${exercise({ scenario })}`, thinkingLevel: "low" });
       if (this.shuttingDown) throw new TrainingShuttingDownError(); pending.evaluatorSession = await this.sessionFactory.createSession({ systemPrompt: framework.evaluatorPrompt, thinkingLevel: "medium" }); if (this.shuttingDown) throw new TrainingShuttingDownError();
-      let openingMessage; const turns = []; if (framework.startMode === "character-opens") { await prompt(pending.characterSession, "Begin the role-play by presenting your concern to the user."); openingMessage = reply(pending.characterSession); turns.push({ speaker: "Character", text: openingMessage }); }
-      const trainingId = randomUUID(); this.trainings.set(trainingId, { ...pending, framework, scenario, feedbackMode, transcript: turns, messageCount: 0, lock: false, ending: false });
+      let openingMessage; const turns = []; if (framework.startMode === "character-opens") { await prompt(pending.characterSession, "Begin the role-play by presenting your concern to the user."); openingMessage = reply(pending.characterSession); if (this.shuttingDown) throw new TrainingShuttingDownError(); turns.push({ speaker: "Character", text: openingMessage }); }
+      if (this.shuttingDown) throw new TrainingShuttingDownError(); const trainingId = randomUUID(); this.trainings.set(trainingId, { ...pending, framework, scenario, feedbackMode, transcript: turns, messageCount: 0, lock: false, ending: false });
       return framework.startMode === "character-opens" ? { trainingId, startMode: framework.startMode, openingMessage } : { trainingId, startMode: framework.startMode, publicContext: scenario.publicContext };
     } catch (error) { dispose(pending); throw error; } finally { this.pendingCreations.delete(pending); this.pendingTrainings--; }
   }
   available(id, ending = false) { const training = this.trainings.get(id); if (!training) throw new TrainingNotFoundError(); if (training.lock || training.ending) throw new TrainingBusyError(); training.lock = true; if (ending) training.ending = true; return training; }
   retire(training) { for (const [id, value] of this.trainings) if (value === training) this.trainings.delete(id); dispose(training); }
-  async sendMessage(id, message) { const training = this.available(id); try { return await this.handleMessage(training, message); } catch (error) { this.retire(training); throw error; } finally { training.lock = false; } }
-  async handleMessage(training, message) {
+  async sendMessage(id, message) { const training = this.available(id); const progress = { calledSdk: false }; try { return await this.handleMessage(training, message, progress); } catch (error) { if (progress.calledSdk) this.retire(training); throw error; } finally { training.lock = false; } }
+  async handleMessage(training, message, progress) {
     if (training.messageCount >= MAX_MESSAGES || lengthOf(training.transcript) + message.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.messageCount++;
     const base = `Assigned situation (trusted exercise data):\n${exercise(training)}\n[TRANSCRIPT]\n${transcript(training.transcript)}\n[END TRANSCRIPT]`;
-    await prompt(training.evaluatorSession, `${training.framework.evaluatorPrompt}\n\nMODE: VALIDATE\n${base}\n[USER MESSAGE]\n${message}\n[END USER MESSAGE]`);
+    progress.calledSdk = true; await prompt(training.evaluatorSession, `${training.framework.evaluatorPrompt}\n\nMODE: VALIDATE\n${base}\n[USER MESSAGE]\n${message}\n[END USER MESSAGE]`);
     if (reply(training.evaluatorSession).trim() === "BLOCK") return { status: "blocked", message: BLOCK_MESSAGE };
     training.transcript.push({ speaker: "User", text: message }); await prompt(training.characterSession, message); const characterReply = reply(training.characterSession); if (lengthOf(training.transcript) + characterReply.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.transcript.push({ speaker: "Character", text: characterReply });
     const result = { status: "accepted", reply: characterReply };
