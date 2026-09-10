@@ -1,32 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { TrainingBusyError, TrainingService } from "../src/training-service.mjs";
-
-const content = Object.freeze({ guestPrompt: "Guest prompt", evaluatorPrompt: "Evaluator prompt", scenarios: Object.freeze({ "air-conditioning": "Air scenario", "sofa-bed": "Sofa scenario", "missed-breakfast": "Breakfast scenario" }), version: "version" });
-function fakeSession(reply) { return { prompts: [], disposed: false, async prompt(text) { this.prompts.push(text); }, getLastAssistantText() { return reply; }, async abort() {}, dispose() { this.disposed = true; } }; }
-function setup({ evaluatorReply = "ALLOW" } = {}) {
-  const calls = []; const sessions = [];
-  const factoryCreator = async () => ({ async createSession(options) { calls.push(options); const session = fakeSession(calls.length % 2 ? "Guest opening" : evaluatorReply); sessions.push(session); return session; } });
-  return { service: new TrainingService({ contentLoader: async () => content, sessionFactoryCreator: factoryCreator }), calls, sessions };
-}
-
-test("initializes once and creates isolated Guest/Evaluator sessions with approved options", async () => {
-  const { service, calls, sessions } = setup();
-  const training = await service.createTraining("air-conditioning");
-  assert.ok(training.trainingId); assert.equal(calls.length, 2); assert.notEqual(sessions[0], sessions[1]);
-  assert.equal(calls[0].thinkingLevel, "low"); assert.equal(calls[1].thinkingLevel, "medium");
-  assert.match(calls[0].systemPrompt, /Guest prompt[\s\S]*Air scenario/); assert.equal(calls[1].systemPrompt, "Evaluator prompt");
-});
-test("owns locks, validates with transcript, and cleans both sessions on end", async () => {
-  const { service, sessions } = setup(); const { trainingId } = await service.createTraining("air-conditioning");
-  const training = service.trainings.get(trainingId); training.lock = true;
-  await assert.rejects(() => service.sendMessage(trainingId, "Hello"), TrainingBusyError); training.lock = false;
-  const result = await service.sendMessage(trainingId, "I will help with the noise."); assert.equal(result.status, "accepted");
-  assert.match(sessions[1].prompts[0], /MODE: VALIDATE[\s\S]*\[TRANSCRIPT\]/);
-  await service.endTraining(trainingId); assert.equal(service.trainings.has(trainingId), false); assert.equal(sessions[0].disposed, true); assert.equal(sessions[1].disposed, true);
-});
-test("cleans partial session creation failures", async () => {
-  const firstGuest = fakeSession("Guest opening"); let guest = firstGuest;
-  const service = new TrainingService({ contentLoader: async () => content, sessionFactoryCreator: async () => ({ async createSession() { if (guest) { const value = guest; guest = null; return value; } throw new Error("factory_failed"); } }) });
-  await assert.rejects(() => service.createTraining("air-conditioning")); assert.equal(firstGuest.disposed, true);
-});
+import { TrainingService } from "../src/training-service.mjs";
+const scenario = (id, context = "Public") => Object.freeze({ id, displayName: id, publicContext: context, privateContext: "Private", characterProfile: "" });
+const framework = (id, startMode) => Object.freeze({ id, displayName: id, startMode, feedbackModes: Object.freeze(["final", "immediate-and-final"]), finalFeedbackMode: "FINAL_EVALUATE", characterPrompt: "Character", evaluatorPrompt: "Evaluator", immediateFeedbackPrompt: "Immediate", scenarios: Object.freeze([scenario(`${id}-one`)]), version: id });
+const content = Object.freeze({ frameworks: Object.freeze([framework("heart", "character-opens"), framework("grow", "user-opens-with-context")]), byId: Object.freeze({ heart: framework("heart", "character-opens"), grow: framework("grow", "user-opens-with-context") }) });
+function setup(replies = ["Opening", "ALLOW", "Character reply", "Immediate", "Final"]) { const sessions=[]; let index=0; const factory=async()=>({ async createSession(options) { const session={ options, prompts:[], disposed:false, async prompt(p){this.prompts.push(p)},getLastAssistantText(){return replies[index++] ?? "ALLOW"},async abort(){},dispose(){this.disposed=true} }; sessions.push(session); return session; } }); return { service:new TrainingService({contentLoader:async()=>content,sessionFactoryCreator:factory}),sessions }; }
+test("catalog is public and supports both declarative starts", async()=>{ const {service,sessions}=setup(); const catalog=await service.getCatalog(); assert.deepEqual(Object.keys(catalog.frameworks[0]),["id","displayName","feedbackModes","scenarios"]); const heart=await service.createTraining({frameworkId:"heart",scenarioId:"heart-one",feedbackMode:"final"}); assert.equal(heart.startMode,"character-opens"); assert.ok(heart.openingMessage); const grow=await service.createTraining({frameworkId:"grow",scenarioId:"grow-one",feedbackMode:"final"}); assert.equal(grow.publicContext,"Public"); assert.equal(sessions.length,4); });
+test("orders validate then character then immediate feedback and disposes on end", async()=>{ const {service,sessions}=setup(); const t=await service.createTraining({frameworkId:"heart",scenarioId:"heart-one",feedbackMode:"immediate-and-final"}); const r=await service.sendMessage(t.trainingId,"Hello"); assert.equal(r.feedback,"Immediate"); assert.match(sessions[1].prompts[0],/MODE: VALIDATE/); assert.equal(sessions[0].prompts.at(-1),"Hello"); assert.match(sessions[1].prompts[1],/MODE: IMMEDIATE_FEEDBACK/); const end=await service.endTraining(t.trainingId); assert.equal(end.feedback,"Final"); assert.equal(sessions.every(s=>s.disposed),true); });
+test("BLOCK never reaches character and provider failure closes training", async()=>{ const blocked=setup(["Opening","BLOCK"]); const t=await blocked.service.createTraining({frameworkId:"heart",scenarioId:"heart-one",feedbackMode:"final"}); assert.equal((await blocked.service.sendMessage(t.trainingId,"weather")).status,"blocked"); assert.equal(blocked.sessions[0].prompts.length,1); const failing=setup(["Opening","ALLOW"]); const u=await failing.service.createTraining({frameworkId:"heart",scenarioId:"heart-one",feedbackMode:"final"}); failing.sessions[0].prompt=async()=>{throw new Error("provider")}; await assert.rejects(()=>failing.service.sendMessage(u.trainingId,"Hello")); assert.equal(failing.service.trainings.has(u.trainingId),false); assert.equal(failing.sessions.every(s=>s.disposed),true); });

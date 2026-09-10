@@ -1,0 +1,1 @@
+{"id":"heart","displayName":"HEART","startMode":"character-opens","feedbackModes":["final","immediate-and-final"],"characterPromptFile":"prompts/character.md","evaluatorPromptFile":"prompts/evaluator.md","immediateFeedbackPromptFile":"prompts/immediate-feedback.md","scenariosFile":"scenarios.json","finalFeedbackMode":"EVALUATE"}

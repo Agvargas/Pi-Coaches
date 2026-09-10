@@ -1,0 +1,1 @@
+{"id":"grow","displayName":"GROW","startMode":"user-opens-with-context","feedbackModes":["final","immediate-and-final"],"characterPromptFile":"prompts/character.md","evaluatorPromptFile":"prompts/evaluator.md","immediateFeedbackPromptFile":"prompts/evaluator.md","scenariosFile":"scenarios.json","finalFeedbackMode":"FINAL_EVALUATE"}

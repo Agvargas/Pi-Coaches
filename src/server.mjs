@@ -1,92 +1,17 @@
 import { createServer } from "node:http";
-import {
-  PromptTimeoutError,
-  TrainingBusyError,
-  TrainingLimitError,
-  TrainingNotFoundError,
-  TrainingService,
-  TrainingShuttingDownError,
-} from "./training-service.mjs";
-
-const HOST = "127.0.0.1";
-const PORT = 3000;
-const MAX_BODY_BYTES = 16 * 1024;
-const MAX_MESSAGE_CHARACTERS = 4_000;
-const SCENARIO_IDS = new Set(["air-conditioning", "sofa-bed", "missed-breakfast"]);
-const trainingService = new TrainingService();
-let shuttingDown = false;
-
-class BodyTooLargeError extends Error {}
-
-function sendJson(response, statusCode, body) {
-  response.writeHead(statusCode, { "content-type": "application/json; charset=utf-8" });
-  response.end(JSON.stringify(body));
-}
-
-async function readJsonBody(request) {
-  const chunks = [];
-  let size = 0;
-  for await (const chunk of request) {
-    size += chunk.length;
-    if (size > MAX_BODY_BYTES) throw new BodyTooLargeError();
-    chunks.push(chunk);
-  }
-  try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch { throw new Error("invalid_body"); }
-}
-
-function isExactObject(value, keys) {
-  return value !== null && typeof value === "object" && !Array.isArray(value)
-    && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key));
-}
-
-function sendOperationError(response, error) {
-  if (error instanceof TrainingNotFoundError) sendJson(response, 404, { error: "training_not_found" });
-  else if (error instanceof TrainingBusyError) sendJson(response, 409, { error: "training_busy" });
-  else if (error instanceof TrainingLimitError) sendJson(response, 413, { error: "limit_exceeded" });
-  else if (error instanceof TrainingShuttingDownError || trainingService.initializationError) sendJson(response, 503, { error: "service_unavailable" });
-  else if (error instanceof PromptTimeoutError) sendJson(response, 504, { error: "timeout" });
-  else sendJson(response, 502, { error: "coach_unavailable" });
-}
-
+import { PromptTimeoutError, TrainingBusyError, TrainingLimitError, TrainingNotFoundError, TrainingService, TrainingShuttingDownError } from "./training-service.mjs";
+const HOST = "127.0.0.1", PORT = 3000, MAX_BODY_BYTES = 16 * 1024, MAX_MESSAGE_CHARACTERS = 4_000;
+const trainingService = new TrainingService(); let shuttingDown = false; class BodyTooLargeError extends Error {}
+function sendJson(response, status, body) { response.writeHead(status, { "content-type": "application/json; charset=utf-8" }); response.end(JSON.stringify(body)); }
+async function body(request) { const chunks = []; let size = 0; for await (const chunk of request) { size += chunk.length; if (size > MAX_BODY_BYTES) throw new BodyTooLargeError(); chunks.push(chunk); } try { return JSON.parse(Buffer.concat(chunks).toString("utf8")); } catch { throw new Error("invalid_body"); } }
+function exact(value, keys) { return value !== null && typeof value === "object" && !Array.isArray(value) && Object.keys(value).length === keys.length && keys.every((key) => Object.hasOwn(value, key)); }
+function operationError(response, error) { if (error instanceof TrainingNotFoundError) sendJson(response, 404, { error: "training_not_found" }); else if (error instanceof TrainingBusyError) sendJson(response, 409, { error: "training_busy" }); else if (error instanceof TrainingLimitError) sendJson(response, 413, { error: "limit_exceeded" }); else if (error instanceof TrainingShuttingDownError || trainingService.initializationError) sendJson(response, 503, { error: "service_unavailable" }); else if (error instanceof PromptTimeoutError) sendJson(response, 504, { error: "timeout" }); else sendJson(response, 502, { error: "coach_unavailable" }); }
 const server = createServer(async (request, response) => {
   if (shuttingDown) return sendJson(response, 503, { error: "service_unavailable" });
-  if (request.method === "GET" && request.url === "/health") {
-    await trainingService.initialization;
-    return sendJson(response, trainingService.initializationError ? 503 : 200, trainingService.initializationError ? { error: "service_unavailable" } : { status: "ok" });
-  }
-  if (request.method !== "POST") return sendJson(response, 405, { error: "method_not_allowed" });
-  let body;
-  try { body = await readJsonBody(request); } catch (error) {
-    return sendJson(response, error instanceof BodyTooLargeError ? 413 : 400, { error: error instanceof BodyTooLargeError ? "limit_exceeded" : "invalid_request" });
-  }
-  if (request.url === "/trainings") {
-    if (!isExactObject(body, ["scenarioId"]) || !SCENARIO_IDS.has(body.scenarioId)) return sendJson(response, 400, { error: "invalid_request" });
-    try { return sendJson(response, 201, await trainingService.createTraining(body.scenarioId)); } catch (error) {
-      if (error instanceof TrainingLimitError) return sendJson(response, 429, { error: "too_many_trainings" });
-      return sendOperationError(response, error);
-    }
-  }
-  const messageRoute = /^\/trainings\/([^/]+)\/messages$/.exec(request.url ?? "");
-  const endRoute = /^\/trainings\/([^/]+)\/end$/.exec(request.url ?? "");
-  const route = messageRoute ?? endRoute;
-  if (!route) return sendJson(response, 400, { error: "invalid_request" });
-  if (messageRoute && (!isExactObject(body, ["message"]) || typeof body.message !== "string" || body.message.length < 1)) return sendJson(response, 400, { error: "invalid_request" });
-  if (messageRoute && body.message.length > MAX_MESSAGE_CHARACTERS) return sendJson(response, 413, { error: "limit_exceeded" });
-  if (endRoute && !isExactObject(body, [])) return sendJson(response, 400, { error: "invalid_request" });
-  try {
-    return sendJson(response, 200, messageRoute
-      ? await trainingService.sendMessage(route[1], body.message)
-      : await trainingService.endTraining(route[1]));
-  } catch (error) { return sendOperationError(response, error); }
+  if (request.method === "GET" && request.url === "/health") { await trainingService.initialization; return sendJson(response, trainingService.initializationError ? 503 : 200, trainingService.initializationError ? { error: "service_unavailable" } : { status: "ok" }); }
+  if (request.method === "GET" && request.url === "/frameworks") { try { return sendJson(response, 200, await trainingService.getCatalog()); } catch { return sendJson(response, 503, { error: "service_unavailable" }); } }
+  if (request.method !== "POST") return sendJson(response, 405, { error: "method_not_allowed" }); let input; try { input = await body(request); } catch (error) { return sendJson(response, error instanceof BodyTooLargeError ? 413 : 400, { error: error instanceof BodyTooLargeError ? "limit_exceeded" : "invalid_request" }); }
+  if (request.url === "/trainings") { if (!exact(input, ["frameworkId", "scenarioId", "feedbackMode"]) || typeof input.frameworkId !== "string" || typeof input.scenarioId !== "string" || !["final", "immediate-and-final"].includes(input.feedbackMode)) return sendJson(response, 400, { error: "invalid_request" }); try { return sendJson(response, 201, await trainingService.createTraining(input)); } catch (error) { if (error instanceof TrainingLimitError) return sendJson(response, 429, { error: "too_many_trainings" }); if (error instanceof TrainingNotFoundError) return sendJson(response, 400, { error: "invalid_request" }); return operationError(response, error); } }
+  const messageRoute = /^\/trainings\/([^/]+)\/messages$/.exec(request.url ?? ""), endRoute = /^\/trainings\/([^/]+)\/end$/.exec(request.url ?? ""); const route = messageRoute ?? endRoute; if (!route) return sendJson(response, 400, { error: "invalid_request" }); if (messageRoute && (!exact(input, ["message"]) || typeof input.message !== "string" || input.message.length < 1)) return sendJson(response, 400, { error: "invalid_request" }); if (messageRoute && input.message.length > MAX_MESSAGE_CHARACTERS) return sendJson(response, 413, { error: "limit_exceeded" }); if (endRoute && !exact(input, [])) return sendJson(response, 400, { error: "invalid_request" }); try { return sendJson(response, 200, messageRoute ? await trainingService.sendMessage(route[1], input.message) : await trainingService.endTraining(route[1])); } catch (error) { return operationError(response, error); }
 });
-
-async function shutdown() {
-  if (shuttingDown) return;
-  shuttingDown = true;
-  server.close();
-  await trainingService.shutdown();
-}
-
-process.once("SIGINT", shutdown);
-process.once("SIGTERM", shutdown);
-server.listen(PORT, HOST);
+async function shutdown() { if (shuttingDown) return; shuttingDown = true; server.close(); await trainingService.shutdown(); } process.once("SIGINT", shutdown); process.once("SIGTERM", shutdown); server.listen(PORT, HOST);
