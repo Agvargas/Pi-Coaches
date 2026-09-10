@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `IMPLEMENTING`
-- Persona responsable: aprobó las decisiones de alcance y la tarea.
+- Estado actual: `DONE`
+- Persona responsable: aprobó las decisiones de alcance y la tarea, y emitió `QA OK PC-08`.
 - Creado: 2026-09-10T15:26:08Z
-- Última actualización: 2026-09-10T15:29:13Z
-- Aprobación vigente: `APROBADO PC-08` (2026-09-10T15:27:20Z); evidencia Sdk recibida
+- Última actualización: 2026-09-10T16:06:58Z
+- Aprobación vigente: `APROBADO PC-08` (2026-09-10T15:27:20Z); QA humana aprobada (2026-09-10T15:56:47Z); documentación publicada
 
 ## Objetivo
 
@@ -75,7 +75,7 @@ Extraer el contenido pedagógico HEART actualmente embebido en el servidor a arc
 - Iteración de QA actual: `0`
 - Ciclo técnico actual: `1`
 - Ronda actual: `0`
-- Contexto vigente del ciclo: Sdk aprobó carga con `node:fs/promises` y loader explícito aislado; Cod implementa contenido validado/snapshot y prueba sin cuota en ronda 0.
+- Contexto vigente del ciclo: Rev aprobó espera segura de `initialization`, límites de contenido y aislamiento; commit `0b3c7bb4cf0ac722d89f1fa41fcb5a0990967ca0` publicado. QA humana pendiente.
 - Riesgos a comprobar: traversal de rutas, inicio parcialmente configurado, cambios de contenido a sesiones abiertas, regresión de escenarios/prompts, detalles internos por HTTP y cambios de contrato.
 - Comandos de comprobación estática: `node --check src/server.mjs`, `node --test test/training-content.test.mjs`, `npm ls @earendil-works/pi-coding-agent --depth=0`, `git diff --check` y comprobaciones Git; sin llamadas reales al modelo.
 
@@ -83,10 +83,11 @@ Extraer el contenido pedagógico HEART actualmente embebido en el servidor a arc
 
 - Comando: `npm start`, seguido de `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\chat.ps1`.
 - Resultado esperado: los tres escenarios preservan los hechos aprobados; un mensaje ajeno se bloquea; uno relevante se acepta; `/end` entrega feedback HEART; cambios de contenido solo aparecen tras reiniciar y en una práctica nueva.
-- Resultado observado: pendiente.
-- Estado: pendiente.
+- Resultado observado: `QA OK PC-08` emitido por la persona responsable.
+- Estado: aprobada; documentación en curso.
 
 ## Documentación
 
 - Archivos autorizados después de `QA OK`: `README.md`.
 - Contenido: ubicación controlada de contenido, aplicación por reinicio, restricciones de edición y sin prometer recarga dinámica o administración HTTP.
+- Resultado: README publicado en `c958a616452df88b6868b7f2b32bcee84423fc2f`; PC-08 cerrada el 2026-09-10T16:06:58Z.
