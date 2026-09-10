@@ -50,6 +50,11 @@ test("rejects empty prompts and scenario values", async () => {
   await rejectsContent({ fileReader: reader({ scenarios: JSON.stringify({ "air-conditioning": "a", "sofa-bed": "", "missed-breakfast": "c" }) }) });
 });
 
+test("rejects prompts and scenarios files over their internal size limits", async () => {
+  await rejectsContent({ fileReader: reader({ guest: "a".repeat(32 * 1024 + 1) }) });
+  await rejectsContent({ fileReader: reader({ scenarios: " ".repeat(64 * 1024 + 1) }) });
+});
+
 test("rejects invalid UTF-8 and file read failures", async () => {
   await rejectsContent({ fileReader: reader({ guest: Buffer.from([0xc3, 0x28]) }) });
   await rejectsContent({ fileReader: async () => { throw new Error("read_failed"); } });

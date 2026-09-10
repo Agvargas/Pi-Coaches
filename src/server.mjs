@@ -166,6 +166,8 @@ async function createTraining(scenarioId) {
   const pendingCreation = { guestSession: undefined, evaluatorSession: undefined };
   pendingCreations.add(pendingCreation);
   try {
+    await initialization;
+    if (initializationError || !service) throw new Error("service_unavailable");
     const content = service.trainingContent;
     const scenario = content.scenarios[scenarioId];
     pendingCreation.guestSession = await createRoleSession(`${content.guestPrompt}\n\nAssigned situation (trusted exercise data):\n${scenario}`, "low");
