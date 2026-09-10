@@ -27,6 +27,10 @@ The script presents these scenarios: `air-conditioning`, `sofa-bed`, and `missed
 
 The Evaluator checks context while you converse. It blocks only clearly out-of-context messages (for example, pizza or football); relevant responses, even poor ones, are accepted and evaluated at the end. For `missed-breakfast`, do not promise free nights, giveaways, cooked-to-order food, food delivered to the room, discounts above 50%, or a room upgrade.
 
+## HEART content administration
+
+The HEART training content is maintained on the server in repository files under `training-content/heart/`. The server validates this content at startup. An administrator with server access may edit the content files, but changes require a server restart and apply only to new practices. There is no HTTP reload or editing endpoint. The scenario IDs remain `air-conditioning`, `sofa-bed`, and `missed-breakfast`; the public blocked response remains fixed.
+
 ## Validated API
 
 All routes are local and require no public authentication. JSON inputs must match the forms shown exactly.
