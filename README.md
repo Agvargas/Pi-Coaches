@@ -31,6 +31,10 @@ The Evaluator checks context while you converse. It blocks only clearly out-of-c
 
 The HEART training content is maintained on the server in repository files under `training-content/heart/`. The server validates this content at startup. An administrator with server access may edit the content files, but changes require a server restart and apply only to new practices. There is no HTTP reload or editing endpoint. The scenario IDs remain `air-conditioning`, `sofa-bed`, and `missed-breakfast`; the public blocked response remains fixed.
 
+## Modular structure
+
+The confirmed implementation separates responsibilities into four modules: `src/server.mjs` handles HTTP, `src/training-service.mjs` runs the training flow, `src/sdk-session-factory.mjs` creates SDK sessions, and `src/training-content.mjs` loads and validates HEART content. The declarative `training-content/heart/manifest.json` identifies the fixed HEART content files; it does not execute code or configure models or tools. This structure does not add framework selection, package selection through the API, or dynamic reloading.
+
 ## Validated API
 
 All routes are local and require no public authentication. JSON inputs must match the forms shown exactly.
