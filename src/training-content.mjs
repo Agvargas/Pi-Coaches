@@ -5,28 +5,21 @@ import { fileURLToPath } from "node:url";
 
 const CONTENT_DIRECTORY = join(dirname(fileURLToPath(import.meta.url)), "..", "training-content", "heart");
 const SCENARIO_IDS = ["air-conditioning", "sofa-bed", "missed-breakfast"];
+const MANIFEST_KEYS = ["guestPromptFile", "evaluatorPromptFile", "scenariosFile"];
+const APPROVED_FILES = new Set(["guest-prompt.md", "evaluator-prompt.md", "scenarios.json"]);
 const MAX_PROMPT_BYTES = 32 * 1024;
 const MAX_SCENARIOS_BYTES = 64 * 1024;
+const MAX_MANIFEST_BYTES = 4 * 1024;
 
 export class TrainingContentError extends Error {}
 
-function failValidation() {
-  throw new TrainingContentError("invalid_training_content");
-}
+function failValidation() { throw new TrainingContentError("invalid_training_content"); }
 
 async function readUtf8(fileReader, path, maximumBytes) {
   let bytes;
-  try {
-    bytes = await fileReader(path);
-  } catch {
-    failValidation();
-  }
+  try { bytes = await fileReader(path); } catch { failValidation(); }
   if (!Buffer.isBuffer(bytes) || bytes.length > maximumBytes) failValidation();
-  try {
-    return new TextDecoder("utf-8", { fatal: true }).decode(bytes);
-  } catch {
-    failValidation();
-  }
+  try { return new TextDecoder("utf-8", { fatal: true }).decode(bytes); } catch { failValidation(); }
 }
 
 function validateText(value) {
@@ -34,12 +27,31 @@ function validateText(value) {
   return value;
 }
 
-function validateScenarios(value) {
+function validateExactObject(value, keys) {
   if (value === null || typeof value !== "object" || Array.isArray(value)
-    || Object.getPrototypeOf(value) !== Object.prototype) failValidation();
-  const keys = Object.keys(value);
-  if (keys.length !== SCENARIO_IDS.length || !SCENARIO_IDS.every((id) => Object.hasOwn(value, id))) failValidation();
+    || Object.getPrototypeOf(value) !== Object.prototype || Object.keys(value).length !== keys.length
+    || !keys.every((key) => Object.hasOwn(value, key))) failValidation();
+}
+
+function validateManifest(value) {
+  validateExactObject(value, MANIFEST_KEYS);
+  for (const key of MANIFEST_KEYS) {
+    const file = value[key];
+    if (typeof file !== "string" || !APPROVED_FILES.has(file)
+      || file.includes("..") || file.includes("/") || file.includes("\\")) failValidation();
+  }
+  if (value.guestPromptFile !== "guest-prompt.md" || value.evaluatorPromptFile !== "evaluator-prompt.md"
+    || value.scenariosFile !== "scenarios.json") failValidation();
+  return value;
+}
+
+function validateScenarios(value) {
+  validateExactObject(value, SCENARIO_IDS);
   return Object.freeze(Object.fromEntries(SCENARIO_IDS.map((id) => [id, validateText(value[id])] )));
+}
+
+function parseJson(text) {
+  try { return JSON.parse(text); } catch { failValidation(); }
 }
 
 function createVersion(guestPrompt, evaluatorPrompt, scenarios) {
@@ -50,25 +62,12 @@ function createVersion(guestPrompt, evaluatorPrompt, scenarios) {
 }
 
 export async function loadTrainingContent({ fileReader = readFile } = {}) {
-  const guestPromptPath = join(CONTENT_DIRECTORY, "guest-prompt.md");
-  const evaluatorPromptPath = join(CONTENT_DIRECTORY, "evaluator-prompt.md");
-  const scenariosPath = join(CONTENT_DIRECTORY, "scenarios.json");
+  const manifest = validateManifest(parseJson(await readUtf8(fileReader, join(CONTENT_DIRECTORY, "manifest.json"), MAX_MANIFEST_BYTES)));
   const [guestPrompt, evaluatorPrompt, scenariosText] = await Promise.all([
-    readUtf8(fileReader, guestPromptPath, MAX_PROMPT_BYTES),
-    readUtf8(fileReader, evaluatorPromptPath, MAX_PROMPT_BYTES),
-    readUtf8(fileReader, scenariosPath, MAX_SCENARIOS_BYTES),
+    readUtf8(fileReader, join(CONTENT_DIRECTORY, manifest.guestPromptFile), MAX_PROMPT_BYTES),
+    readUtf8(fileReader, join(CONTENT_DIRECTORY, manifest.evaluatorPromptFile), MAX_PROMPT_BYTES),
+    readUtf8(fileReader, join(CONTENT_DIRECTORY, manifest.scenariosFile), MAX_SCENARIOS_BYTES),
   ]);
-  let parsedScenarios;
-  try {
-    parsedScenarios = JSON.parse(scenariosText);
-  } catch {
-    failValidation();
-  }
-  const scenarios = validateScenarios(parsedScenarios);
-  return Object.freeze({
-    guestPrompt: validateText(guestPrompt),
-    evaluatorPrompt: validateText(evaluatorPrompt),
-    scenarios,
-    version: createVersion(guestPrompt, evaluatorPrompt, scenarios),
-  });
+  const scenarios = validateScenarios(parseJson(scenariosText));
+  return Object.freeze({ guestPrompt: validateText(guestPrompt), evaluatorPrompt: validateText(evaluatorPrompt), scenarios, version: createVersion(guestPrompt, evaluatorPrompt, scenarios) });
 }
