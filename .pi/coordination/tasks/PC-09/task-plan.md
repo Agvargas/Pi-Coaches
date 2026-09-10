@@ -4,10 +4,10 @@
 
 ## Estado
 
-- Estado actual: `IMPLEMENTING`
+- Estado actual: `DONE`
 - Creado: 2026-09-10T16:30:23Z
-- Última actualización: 2026-09-10T16:33:34Z
-- Aprobación vigente: `APROBADO PC-09` (2026-09-10T16:31:53Z); evidencia Sdk recibida
+- Última actualización: 2026-09-10T17:02:43Z
+- Aprobación vigente: `APROBADO PC-09` (2026-09-10T16:31:53Z); QA humana aprobada (2026-09-10T16:48:37Z); documentación publicada
 
 ## Objetivo
 
@@ -80,8 +80,9 @@ HEART continúa funcionando con los mismos tres escenarios y contrato HTTP. `src
 
 - Comandos: `npm start`, seguido de `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\chat.ps1`.
 - Resultado esperado: los tres escenarios preservan hechos; mensaje ajeno bloqueado; respuesta relevante aceptada; `/end` entrega feedback HEART; sesiones aisladas y cierre siguen funcionando.
-- Estado: pendiente de revisión técnica.
+- Estado: `QA OK PC-09` emitido por la persona responsable; documentación en curso.
 
 ## Documentación
 
 - Después de `QA OK`, Doc puede actualizar `README.md` para describir la estructura modular y manifest HEART confirmado, sin prometer soporte de múltiples frameworks todavía.
+- Resultado: README publicado en `adb697fa08137efcbbcdaa47a09e7139172982ac`; PC-09 cerrada el 2026-09-10T17:02:43Z.
