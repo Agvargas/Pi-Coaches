@@ -27,6 +27,7 @@ export class TrainingService {
   }
   available(id, ending = false) { const training = this.trainings.get(id); if (!training) throw new TrainingNotFoundError(); if (training.lock || training.ending) throw new TrainingBusyError(); training.lock = true; if (ending) training.ending = true; return training; }
   retire(training) { for (const [id, value] of this.trainings) if (value === training) this.trainings.delete(id); dispose(training); }
+  cancelTraining(id) { const training = this.available(id); this.retire(training); }
   async sendMessage(id, message) { const training = this.available(id); const progress = { calledSdk: false }; try { return await this.handleMessage(training, message, progress); } catch (error) { if (progress.calledSdk) this.retire(training); throw error; } finally { training.lock = false; } }
   async handleMessage(training, message, progress) {
     if (training.messageCount >= MAX_MESSAGES || lengthOf(training.transcript) + message.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.messageCount++;
