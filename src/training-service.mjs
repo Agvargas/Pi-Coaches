@@ -7,7 +7,34 @@ export class PromptTimeoutError extends Error {} export class TrainingLimitError
 function reply(session) { const value = session.getLastAssistantText(); if (typeof value !== "string" || value.length === 0) throw new Error("empty_reply"); return value; }
 function transcript(transcriptValue) { return transcriptValue.map(({ speaker, text }) => `[${speaker}]\n${text}\n[END ${speaker}]`).join("\n"); }
 function lengthOf(value) { return value.reduce((total, turn) => total + turn.speaker.length + turn.text.length, 0); }
-async function prompt(session, value, observation) { let timer, unsubscribe, retries = 0, completions = 0, usage = null, outcome = "ok"; const started = performance.now(); try { if (observation && typeof observation.recorder === "function" && typeof session.subscribe === "function") { const listener = (event) => { if (event?.type === "auto_retry_start") retries++; if (event?.type === "message_end" && event?.message?.role === "assistant") { completions++; const u=event.message.usage; if (u && [u.input,u.output,u.cacheRead,u.cacheWrite,u.cost?.total].every((n)=>n == null || typeof n === "number")) usage={input:u.input ?? null,output:u.output ?? null,cacheRead:u.cacheRead ?? null,cacheWrite:u.cacheWrite ?? null,costTotal:u.cost?.total ?? null,stopReason:typeof event.message.stopReason === "string" ? event.message.stopReason : null}; } }; try { unsubscribe=session.subscribe(listener); } catch {} } await Promise.race([session.prompt(value), new Promise((_, reject) => { timer = setTimeout(() => reject(new PromptTimeoutError()), PROMPT_TIMEOUT_MS); })]); } catch (error) { outcome=error instanceof PromptTimeoutError ? "timeout" : "error"; if (error instanceof PromptTimeoutError) await session.abort().catch(() => {}); throw error; } finally { clearTimeout(timer); if (typeof unsubscribe === "function") { try { unsubscribe(); } catch {} } if (typeof observation?.recorder === "function") { try { observation.recorder({ stage:observation.stage, turn:observation.turn, frameworkId:observation.frameworkId, feedbackMode:observation.feedbackMode, durationMs:performance.now()-started, outcome, completions, retries, usage, decision:observation.decision ?? null }); } catch {} } } }
+async function prompt(session, value, observation) {
+  let timer, unsubscribe, retries = 0, completions = 0, usage = null, outcome = "success", decision = null;
+  const recorder = typeof observation?.recorder === "function" ? observation.recorder : undefined;
+  const started = performance.now();
+  try {
+    if (recorder && typeof session.subscribe === "function") {
+      const listener = (event) => { try {
+        if (event?.type === "auto_retry_start") retries++;
+        if (event?.type === "message_end" && event?.message?.role === "assistant") {
+          completions++; const u = event.message.usage;
+          if (u && [u.input,u.output,u.cacheRead,u.cacheWrite,u.cost?.total].every((n) => n == null || (typeof n === "number" && Number.isFinite(n)))) usage = { input:u.input ?? null, output:u.output ?? null, cacheRead:u.cacheRead ?? null, cacheWrite:u.cacheWrite ?? null, costTotal:u.cost?.total ?? null };
+        }
+      } catch {} };
+      try { unsubscribe = session.subscribe(listener); } catch {}
+    }
+    await Promise.race([session.prompt(value), new Promise((_, reject) => { timer = setTimeout(() => reject(new PromptTimeoutError()), PROMPT_TIMEOUT_MS); })]);
+    const text = reply(session);
+    if (observation?.stage === "VALIDATE") decision = text.trim() === "BLOCK" ? "BLOCK" : "ALLOW";
+    return text;
+  } catch (error) {
+    outcome = error instanceof PromptTimeoutError ? "timeout" : "error";
+    if (error instanceof PromptTimeoutError) await session.abort().catch(() => {});
+    throw error;
+  } finally {
+    clearTimeout(timer); if (typeof unsubscribe === "function") try { unsubscribe(); } catch {}
+    if (recorder) try { recorder({ stage:observation.stage, turn:observation.turn, frameworkId:observation.frameworkId, feedbackMode:observation.feedbackMode, durationMs:performance.now()-started, outcome, completions, retries, usage, decision }); } catch {}
+  }
+}
 function dispose(training) { training.characterSession?.dispose(); training.evaluatorSession?.dispose(); }
 function exercise(training) { return `${training.scenario.characterProfile ? `${training.scenario.characterProfile}\n\n` : ""}${training.scenario.privateContext}`; }
 export class TrainingService {
@@ -15,12 +42,13 @@ export class TrainingService {
   async initialize(loader, creator) { try { this.content = await loader(); this.sessionFactory = await creator(); } catch { this.initializationError = true; } }
   async ensureReady() { await this.initialization; if (this.initializationError || !this.content || !this.sessionFactory) throw new Error("service_unavailable"); }
   async getCatalog() { await this.ensureReady(); return publicCatalog(this.content); }
+  observe(stage, turn, frameworkId, feedbackMode) { return this.recorder ? { recorder:this.recorder, stage, turn, frameworkId, feedbackMode } : undefined; }
   async createTraining({ frameworkId, scenarioId, feedbackMode }) {
     if (this.shuttingDown) throw new TrainingShuttingDownError(); if (this.trainings.size + this.pendingTrainings >= MAX_ACTIVE_TRAININGS) throw new TrainingLimitError(); this.pendingTrainings++; const pending = {}; this.pendingCreations.add(pending);
     try { await this.ensureReady(); const framework = this.content.byId[frameworkId]; const scenario = framework?.scenarios.find((item) => item.id === scenarioId); if (!scenario || !framework.feedbackModes.includes(feedbackMode)) throw new TrainingNotFoundError();
       pending.characterSession = await this.sessionFactory.createSession({ systemPrompt: `${framework.characterPrompt}\n\nAssigned situation (trusted exercise data):\n${exercise({ scenario })}`, thinkingLevel: "low" });
       if (this.shuttingDown) throw new TrainingShuttingDownError(); pending.evaluatorSession = await this.sessionFactory.createSession({ systemPrompt: framework.evaluatorPrompt, thinkingLevel: "medium" }); if (this.shuttingDown) throw new TrainingShuttingDownError();
-      let openingMessage; const turns = []; if (framework.startMode === "character-opens") { await prompt(pending.characterSession, "Begin the role-play by presenting your concern to the user.", { recorder:this.recorder, stage:"CHARACTER", turn:0, frameworkId:framework.id, feedbackMode }); openingMessage = reply(pending.characterSession); if (this.shuttingDown) throw new TrainingShuttingDownError(); turns.push({ speaker: "Character", text: openingMessage }); }
+      let openingMessage; const turns = []; if (framework.startMode === "character-opens") { openingMessage = await prompt(pending.characterSession, "Begin the role-play by presenting your concern to the user.", this.observe("CHARACTER", 0, framework.id, feedbackMode)); if (this.shuttingDown) throw new TrainingShuttingDownError(); turns.push({ speaker: "Character", text: openingMessage }); }
       if (this.shuttingDown) throw new TrainingShuttingDownError(); const trainingId = randomUUID(); this.trainings.set(trainingId, { ...pending, framework, scenario, feedbackMode, transcript: turns, messageCount: 0, lock: false, ending: false });
       return framework.startMode === "character-opens" ? { trainingId, startMode: framework.startMode, openingMessage } : { trainingId, startMode: framework.startMode, publicContext: scenario.publicContext };
     } catch (error) { dispose(pending); throw error; } finally { this.pendingCreations.delete(pending); this.pendingTrainings--; }
@@ -32,13 +60,13 @@ export class TrainingService {
   async handleMessage(training, message, progress) {
     if (training.messageCount >= MAX_MESSAGES || lengthOf(training.transcript) + message.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.messageCount++;
     const base = `Assigned situation (trusted exercise data):\n${exercise(training)}\n[TRANSCRIPT]\n${transcript(training.transcript)}\n[END TRANSCRIPT]`;
-    progress.calledSdk = true; await prompt(training.evaluatorSession, `${training.framework.evaluatorPrompt}\n\nMODE: VALIDATE\n${base}\n[USER MESSAGE]\n${message}\n[END USER MESSAGE]`, { recorder:this.recorder, stage:"VALIDATE", turn:training.messageCount, frameworkId:training.framework.id, feedbackMode:training.feedbackMode });
-    if (reply(training.evaluatorSession).trim() === "BLOCK") return { status: "blocked", message: BLOCK_MESSAGE };
-    training.transcript.push({ speaker: "User", text: message }); await prompt(training.characterSession, message, { recorder:this.recorder, stage:"CHARACTER", turn:training.messageCount, frameworkId:training.framework.id, feedbackMode:training.feedbackMode }); const characterReply = reply(training.characterSession); if (lengthOf(training.transcript) + characterReply.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.transcript.push({ speaker: "Character", text: characterReply });
+    progress.calledSdk = true; const validationReply = await prompt(training.evaluatorSession, `${training.framework.evaluatorPrompt}\n\nMODE: VALIDATE\n${base}\n[USER MESSAGE]\n${message}\n[END USER MESSAGE]`, this.observe("VALIDATE", training.messageCount, training.framework.id, training.feedbackMode));
+    if (validationReply.trim() === "BLOCK") return { status: "blocked", message: BLOCK_MESSAGE };
+    training.transcript.push({ speaker: "User", text: message }); const characterReply = await prompt(training.characterSession, message, this.observe("CHARACTER", training.messageCount, training.framework.id, training.feedbackMode)); if (lengthOf(training.transcript) + characterReply.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.transcript.push({ speaker: "Character", text: characterReply });
     const result = { status: "accepted", reply: characterReply };
-    if (training.feedbackMode === "immediate-and-final") { await prompt(training.evaluatorSession, `${training.framework.immediateFeedbackPrompt}\n\nMODE: IMMEDIATE_FEEDBACK\nAssigned situation (trusted exercise data):\n${exercise(training)}\n[TRANSCRIPT]\n${transcript(training.transcript)}\n[END TRANSCRIPT]`, { recorder:this.recorder, stage:"IMMEDIATE_FEEDBACK", turn:training.messageCount, frameworkId:training.framework.id, feedbackMode:training.feedbackMode }); result.feedback = reply(training.evaluatorSession); }
+    if (training.feedbackMode === "immediate-and-final") { result.feedback = await prompt(training.evaluatorSession, `${training.framework.immediateFeedbackPrompt}\n\nMODE: IMMEDIATE_FEEDBACK\nAssigned situation (trusted exercise data):\n${exercise(training)}\n[TRANSCRIPT]\n${transcript(training.transcript)}\n[END TRANSCRIPT]`, this.observe("IMMEDIATE_FEEDBACK", training.messageCount, training.framework.id, training.feedbackMode)); }
     return result;
   }
-  async endTraining(id) { const training = this.available(id, true); try { await prompt(training.evaluatorSession, `${training.framework.evaluatorPrompt}\n\nMODE: ${training.framework.finalFeedbackMode}\nAssigned situation (trusted exercise data):\n${exercise(training)}\n[TRANSCRIPT]\n${transcript(training.transcript)}\n[END TRANSCRIPT]`, { recorder:this.recorder, stage:"FINAL_FEEDBACK", turn:training.messageCount, frameworkId:training.framework.id, feedbackMode:training.feedbackMode }); return { feedback: reply(training.evaluatorSession) }; } finally { training.lock = false; this.retire(training); } }
+  async endTraining(id) { const training = this.available(id, true); try { const feedback = await prompt(training.evaluatorSession, `${training.framework.evaluatorPrompt}\n\nMODE: ${training.framework.finalFeedbackMode}\nAssigned situation (trusted exercise data):\n${exercise(training)}\n[TRANSCRIPT]\n${transcript(training.transcript)}\n[END TRANSCRIPT]`, this.observe("FINAL_FEEDBACK", training.messageCount, training.framework.id, training.feedbackMode)); return { feedback }; } finally { training.lock = false; this.retire(training); } }
   async shutdown() { if (this.shuttingDown) return; this.shuttingDown = true; for (const item of [...this.trainings.values(), ...this.pendingCreations]) { await item.characterSession?.abort().catch(() => {}); await item.evaluatorSession?.abort().catch(() => {}); dispose(item); } this.trainings.clear(); }
 }
