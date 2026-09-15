@@ -8,7 +8,8 @@ function reply(session) { const value = session.getLastAssistantText(); if (type
 function transcript(transcriptValue) { return transcriptValue.map(({ speaker, text }) => `[${speaker}]\n${text}\n[END ${speaker}]`).join("\n"); }
 function lengthOf(value) { return value.reduce((total, turn) => total + turn.speaker.length + turn.text.length, 0); }
 async function prompt(session, value, observation) {
-  let timer, unsubscribe, retries = 0, completions = 0, usage = null, outcome = "success", decision = null;
+  let timer, unsubscribe, retries = 0, completions = 0, outcome = "success", decision = null, failureKind = null;
+  const usageTotals = { input:0, output:0, cacheRead:0, cacheWrite:0, costTotal:0 }, usageValid = { input:true, output:true, cacheRead:true, cacheWrite:true, costTotal:true };
   const recorder = typeof observation?.recorder === "function" ? observation.recorder : undefined;
   const started = performance.now();
   try {
@@ -16,8 +17,9 @@ async function prompt(session, value, observation) {
       const listener = (event) => { try {
         if (event?.type === "auto_retry_start") retries++;
         if (event?.type === "message_end" && event?.message?.role === "assistant") {
-          completions++; const u = event.message.usage;
-          if (u && [u.input,u.output,u.cacheRead,u.cacheWrite,u.cost?.total].every((n) => n == null || (typeof n === "number" && Number.isFinite(n)))) usage = { input:u.input ?? null, output:u.output ?? null, cacheRead:u.cacheRead ?? null, cacheWrite:u.cacheWrite ?? null, costTotal:u.cost?.total ?? null };
+          completions++; const u = event.message.usage, values = { input:u?.input, output:u?.output, cacheRead:u?.cacheRead, cacheWrite:u?.cacheWrite, costTotal:u?.cost?.total };
+          for (const [key,n] of Object.entries(values)) { if (typeof n === "number" && Number.isFinite(n) && n >= 0) usageTotals[key]+=n; else usageValid[key]=false; }
+          if (event.message.stopReason === "error") { const text=typeof event.message.errorMessage === "string" ? event.message.errorMessage.toLowerCase() : ""; failureKind=/(auth|unauthori[sz]ed|401|api key|oauth|credential)/.test(text)?"auth":"provider"; }
         }
       } catch {} };
       try { unsubscribe = session.subscribe(listener); } catch {}
@@ -32,7 +34,7 @@ async function prompt(session, value, observation) {
     throw error;
   } finally {
     clearTimeout(timer); if (typeof unsubscribe === "function") try { unsubscribe(); } catch {}
-    if (recorder) try { recorder({ stage:observation.stage, turn:observation.turn, frameworkId:observation.frameworkId, feedbackMode:observation.feedbackMode, durationMs:performance.now()-started, outcome, completions, retries, usage, decision }); } catch {}
+    if (recorder) try { recorder({ stage:observation.stage, turn:observation.turn, frameworkId:observation.frameworkId, feedbackMode:observation.feedbackMode, durationMs:performance.now()-started, outcome, completions, retries, usage:completions>0?Object.fromEntries(Object.keys(usageTotals).map((key)=>[key,usageValid[key]?usageTotals[key]:null])):null, usageComplete:completions>0&&Object.values(usageValid).every(Boolean), decision, failureKind }); } catch {}
   }
 }
 function dispose(training) { training.characterSession?.dispose(); training.evaluatorSession?.dispose(); }
