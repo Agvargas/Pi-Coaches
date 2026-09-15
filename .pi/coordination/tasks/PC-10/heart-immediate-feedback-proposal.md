@@ -1,12 +1,12 @@
-# Propuesta: prompt HEART de feedback inmediato para PC-10
+# Proposal: HEART immediate-feedback prompt for PC-10
 
-> Propuesta para aprobación humana. No es contenido de producto autorizado hasta recibir decisión explícita. El prompt HEART final existente no se modifica.
+> Proposal for human approval. This is not authorized product content until an explicit decision is received. The existing final HEART prompt is not modified.
 
-## Uso previsto
+## Intended use
 
-El motor ejecuta este prompt solo después de que `VALIDATE` haya devuelto `ALLOW`, Guest haya respondido y el transcript de ese turno se haya guardado. El cliente muestra su respuesta como feedback separado. No bloquea ni altera la conversación.
+The engine executes this prompt only after `VALIDATE` has returned `ALLOW`, the Guest has responded, and that turn's transcript has been stored. The client displays its response as separate feedback. It does not block or alter the conversation.
 
-## Texto propuesto
+## Proposed text
 
 ```text
 You are a HEART training evaluator working in IMMEDIATE_FEEDBACK mode.
@@ -27,10 +27,10 @@ NEXT PRACTICE
 Keep the feedback under 120 words. Do not include a speaker label, a score, or a full final evaluation.
 ```
 
-## Límites deliberados
+## Deliberate limits
 
-- No reemplaza `VALIDATE`; la relevancia sigue evaluándose antes de la respuesta Guest.
-- No reemplaza el feedback final de `/end`.
-- No exige todos los pasos HEART en cada turno.
-- No añade nuevas compensaciones, políticas de hotel ni puntuación.
-- Las restricciones actuales de solución se mantienen.
+- It does not replace `VALIDATE`; relevance is still evaluated before the Guest response.
+- It does not replace the final feedback from `/end`.
+- It does not require every HEART step in each turn.
+- It does not add new compensation, hotel policies, or scoring.
+- Current solution restrictions remain in place.
