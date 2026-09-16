@@ -36,7 +36,7 @@ async function prompt(session, value, observation) {
     throw error;
   } finally {
     clearTimeout(timer); if (typeof unsubscribe === "function") try { unsubscribe(); } catch {}
-    if (recorder) try { recorder({ stage:observation.stage, turn:observation.turn, frameworkId:observation.frameworkId, feedbackMode:observation.feedbackMode, durationMs:performance.now()-started, outcome, completions, retries, usage:completions>0?Object.fromEntries(Object.keys(usageTotals).map((key)=>[key,usageValid[key]?usageTotals[key]:null])):null, usageComplete:completions>0&&Object.values(usageValid).every(Boolean), decision, failureKind }); } catch {}
+    if (recorder) try { recorder({ stage:observation.stage, turn:observation.turn, frameworkId:observation.frameworkId, feedbackMode:observation.feedbackMode, durationMs:performance.now()-started, outcome, completions, retries, usage:completions>0?Object.fromEntries(Object.keys(usageTotals).map((key)=>[key,usageValid[key]?usageTotals[key]:null])):null, usageComplete:completions>0&&Object.values(usageValid).every(Boolean), knownTokenLowerBound:usageTotals.input+usageTotals.output+usageTotals.cacheRead+usageTotals.cacheWrite, decision, failureKind }); } catch {}
   }
 }
 function dispose(training) { training.characterSession?.dispose(); training.evaluatorSession?.dispose(); }
