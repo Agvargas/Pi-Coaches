@@ -42,7 +42,7 @@ async function prompt(session, value, observation) {
 function dispose(training) { training.characterSession?.dispose(); training.evaluatorSession?.dispose(); }
 function exercise(training) { return `${training.scenario.characterProfile ? `${training.scenario.characterProfile}\n\n` : ""}${training.scenario.privateContext}`; }
 export class TrainingService {
-  constructor({ contentLoader = loadTrainingContent, sessionFactoryCreator = createSdkSessionFactory, recorder = undefined } = {}) { this.recorder = typeof recorder === "function" ? recorder : undefined; this.trainings = new Map(); this.pendingCreations = new Set(); this.pendingTrainings = 0; this.shuttingDown = false; this.initializationError = false; this.initialization = this.initialize(contentLoader, sessionFactoryCreator); }
+  constructor({ contentLoader = loadTrainingContent, sessionFactoryCreator = createSdkSessionFactory, recorder = undefined, validateVariant = "candidate" } = {}) { this.recorder = typeof recorder === "function" ? recorder : undefined; this.validateVariant = validateVariant === "original" ? "original" : "candidate"; this.trainings = new Map(); this.pendingCreations = new Set(); this.pendingTrainings = 0; this.shuttingDown = false; this.initializationError = false; this.initialization = this.initialize(contentLoader, sessionFactoryCreator); }
   async initialize(loader, creator) { try { this.content = await loader(); this.sessionFactory = await creator(); } catch { this.initializationError = true; } }
   async ensureReady() { await this.initialization; if (this.initializationError || !this.content || !this.sessionFactory) throw new Error("service_unavailable"); }
   async getCatalog() { await this.ensureReady(); return publicCatalog(this.content); }
@@ -53,7 +53,7 @@ export class TrainingService {
       pending.characterSession = await this.sessionFactory.createSession({ systemPrompt: `${framework.characterPrompt}\n\nAssigned situation (trusted exercise data):\n${exercise({ scenario })}`, thinkingLevel: "low" });
       if (this.shuttingDown) throw new TrainingShuttingDownError(); pending.evaluatorSession = await this.sessionFactory.createSession({ systemPrompt: framework.evaluatorPrompt, thinkingLevel: "medium" }); if (this.shuttingDown) throw new TrainingShuttingDownError();
       let openingMessage; const turns = []; if (framework.startMode === "character-opens") { openingMessage = await prompt(pending.characterSession, "Begin the role-play by presenting your concern to the user.", this.observe("CHARACTER", 0, framework.id, feedbackMode)); if (this.shuttingDown) throw new TrainingShuttingDownError(); turns.push({ speaker: "Character", text: openingMessage }); }
-      if (this.shuttingDown) throw new TrainingShuttingDownError(); const trainingId = randomUUID(); this.trainings.set(trainingId, { ...pending, framework, scenario, feedbackMode, transcript: turns, messageCount: 0, lock: false, ending: false });
+      if (this.shuttingDown) throw new TrainingShuttingDownError(); const trainingId = randomUUID(); this.trainings.set(trainingId, { ...pending, framework, scenario, feedbackMode, validateVariant:this.validateVariant, transcript: turns, messageCount: 0, lock: false, ending: false });
       return framework.startMode === "character-opens" ? { trainingId, startMode: framework.startMode, openingMessage } : { trainingId, startMode: framework.startMode, publicContext: scenario.publicContext };
     } catch (error) { dispose(pending); throw error; } finally { this.pendingCreations.delete(pending); this.pendingTrainings--; }
   }
@@ -64,7 +64,7 @@ export class TrainingService {
   async handleMessage(training, message, progress) {
     if (training.messageCount >= MAX_MESSAGES || lengthOf(training.transcript) + message.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.messageCount++;
     const base = `Assigned situation (trusted exercise data):\n${exercise(training)}\n[TRANSCRIPT]\n${transcript(training.transcript)}\n[END TRANSCRIPT]`;
-    progress.calledSdk = true; const validationReply = await prompt(training.evaluatorSession, `${training.framework.evaluatorPrompt}\n\nMODE: VALIDATE\n${base}\n[USER MESSAGE]\n${message}\n[END USER MESSAGE]`, this.observe("VALIDATE", training.messageCount, training.framework.id, training.feedbackMode));
+    progress.calledSdk = true; const validationPrefix = training.validateVariant === "original" ? `${training.framework.evaluatorPrompt}\n\n` : ""; const validationReply = await prompt(training.evaluatorSession, `${validationPrefix}MODE: VALIDATE\n${base}\n[USER MESSAGE]\n${message}\n[END USER MESSAGE]`, this.observe("VALIDATE", training.messageCount, training.framework.id, training.feedbackMode));
     if (validationReply.trim() === "BLOCK") return { status: "blocked", message: BLOCK_MESSAGE };
     training.transcript.push({ speaker: "User", text: message }); const characterReply = await prompt(training.characterSession, message, this.observe("CHARACTER", training.messageCount, training.framework.id, training.feedbackMode)); if (lengthOf(training.transcript) + characterReply.length > MAX_TRANSCRIPT_CHARACTERS) throw new TrainingLimitError(); training.transcript.push({ speaker: "Character", text: characterReply });
     const result = { status: "accepted", reply: characterReply };
