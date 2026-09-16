@@ -32,6 +32,17 @@ Each aggregate contains 114 VALIDATE cases (two runs).
 
 Both variants were exact: 114/114 VALIDATE decisions correct. Relative to the original aggregate, the candidate shows a 9.2% lower median, 9.9% lower p95, 24.1% lower input, and 25.8% lower SDK cost estimate. Total cache-inclusive input (input plus cache read) decreased by 42.5%.
 
+## Grouped by expected decision
+
+| Variant | Expected decision | n / correct | Median (ms) | p95 (ms) | Input | Cache read | Weighted cache ratio | Output | SDK estimated cost |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Original | ALLOW | 54 / 54 | 1,956.299 | 4,431.889 | 78,155 | 19,712 | 20.1416% | 334 | 0.1642604 |
+| Original | BLOCK | 60 / 60 | 1,642.985 | 3,228.577 | 97,495 | 64,768 | 39.9154% | 374 | 0.2124316 |
+| Candidate | ALLOW | 54 / 54 | 1,865.688 | 3,636.359 | 54,271 | 0 | 0% | 380 | 0.1131020 |
+| Candidate | BLOCK | 60 / 60 | 1,498.455 | 2,801.379 | 79,120 | 16,128 | 16.9326% | 406 | 0.1663376 |
+
+ALLOW and BLOCK are separated because their histories and subsequent flows differ. Differences within one expected-decision group do not independently prove a caching effect.
+
 ## Comparison with PC-12
 
 The accepted PC-12 baseline was 1,655.364 ms median, 3,221.333 ms p95, input 92,138, cache read 38,144, output 339, SDK cost estimate 0.1959728, and a 29.28% weighted cache ratio for one 57-case run. Candidate totals per run reduce cache-inclusive input by approximately 42.6% versus PC-12 and reduce the estimated cost by approximately 28.7%. Historical latency is only 0.7% lower at the median and 2.3% lower at p95; these are descriptive comparisons, not causal evidence.
