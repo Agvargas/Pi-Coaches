@@ -7,6 +7,7 @@ export class PromptTimeoutError extends Error {} export class TrainingLimitError
 function reply(session) { const value = session.getLastAssistantText(); if (typeof value !== "string" || value.length === 0) throw new Error("empty_reply"); return value; }
 function transcript(transcriptValue) { return transcriptValue.map(({ speaker, text }) => `[${speaker}]\n${text}\n[END ${speaker}]`).join("\n"); }
 function lengthOf(value) { return value.reduce((total, turn) => total + turn.speaker.length + turn.text.length, 0); }
+function preflightFailure(error, completions) { return error instanceof Error && completions === 0 && (error.message.startsWith('Authentication failed for "') || error.message.startsWith("No API key found for ")) ? "auth" : null; }
 async function prompt(session, value, observation) {
   let timer, unsubscribe, retries = 0, completions = 0, outcome = "success", decision = null, failureKind = null;
   const usageTotals = { input:0, output:0, cacheRead:0, cacheWrite:0, costTotal:0 }, usageValid = { input:true, output:true, cacheRead:true, cacheWrite:true, costTotal:true };
@@ -30,6 +31,7 @@ async function prompt(session, value, observation) {
     return text;
   } catch (error) {
     outcome = error instanceof PromptTimeoutError ? "timeout" : "error";
+    failureKind = error instanceof PromptTimeoutError ? "timeout" : preflightFailure(error, completions) ?? "provider";
     if (error instanceof PromptTimeoutError) await session.abort().catch(() => {});
     throw error;
   } finally {
