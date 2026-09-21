@@ -18,6 +18,12 @@
 | --- | --- | --- | --- | --- |
 | | DRAFT | Orc | Plan creado | Esperar aprobación humana. |
 
+## Gestión de contexto de destinatarios
+
+| Fecha/hora | Destinatario | Contexto previo | Compactación | Resultado | Mensaje posterior |
+| --- | --- | --- | --- | --- | --- |
+| | | | No requerida | | |
+
 ## Decisiones
 
 | Fecha/hora | Estado | Pregunta y evidencia | Decisión humana | Agente notificado |

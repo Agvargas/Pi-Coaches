@@ -60,7 +60,11 @@ Para cada tarea, `Orc` crea:
 
 ## Reglas de despacho
 
-Antes de despachar, `Orc` debe comprobar `link_list` y registrar nombres de terminales y directorio de trabajo en el ledger.
+Solo `Orc` ejecuta `link_compact`. Antes de cada `link_send` de Orc a `Sdk`, `Cod`, `Rev` o `Doc`, Orc consulta `link_list`, identifica nombre exacto, cwd, estado y contexto del destinatario. Si su porcentaje numérico es superior al `50 %`, espera que esté `idle`, compacta ese destinatario y espera el resultado antes de enviar. El valor desconocido (`?`) **no** activa compactación automática; el envío puede continuar si el destinatario está disponible.
+
+Si el despacho de Orc inicia o reinicia un ciclo de implementación y revisión entre Cod y Rev —por ejemplo una tarea nueva, evidencia de Sdk, una decisión o aclaración humana, `QA FAIL`, reasignación o reanudación autorizada— Orc consulta **a Cod y Rev** antes de enviar. Compacta a cada uno cuyo porcentaje numérico sea superior al `50 %`, espera los resultados y después despacha la tarea a Cod. No compacta dos veces al mismo destinatario en esa preparación.
+
+Los handoffs directos `Cod → Rev` (`REVIEW REQUEST`) y `Rev → Cod` (`CHANGES_NEEDED`) no realizan comprobación ni compactación de contexto y no añaden solicitudes o gates adicionales a Orc; Rev conserva su informe ordinario del resultado a Orc. Si un destinatario que Orc debe compactar está ocupado, desconectado, o falla la compactación requerida, Orc no envía todavía su mensaje: espera y vuelve a comprobar `link_list`. Orc registra en el ledger las compactaciones relacionadas con una tarea. Esta regla no reinicia iteraciones de QA, ciclos técnicos ni rondas.
 
 Las tareas asíncronas se envían con `link_send(..., triggerTurn: true)`. Un acuse, plan parcial o actualización de progreso no completa una tarea. `Orc` espera el callback previsto; no usa `link_prompt` para vigilar a un agente ocupado.
 
