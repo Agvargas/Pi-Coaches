@@ -10,7 +10,7 @@
 | Sdk | Sdk | Pi-Coach | idle, análisis por despachar |
 | Cod | Cod | Pi-Coach | idle, no despachado |
 | Rev | Rev | Pi-Coach | idle, no despachado |
-| Doc | pendiente | pendiente | no aplica antes de QA OK |
+| Doc | Doc | Pi-Coach | entrega README completada tras QA OK |
 
 ## Transiciones
 
@@ -48,6 +48,12 @@
 
 | 2026-10-13T17:44:33Z | DONE | Persona responsable → Orc | `QA OK PC-16` expresamente confirmado tras resultados PowerShell y conversaciones reales. Se reconoce QA humana, distinta de verificaciones previas del asistente. Precaución futura codemode/lock ya registrada; documentación del producto no autorizada, por protocolo no despachar Doc. Orc git status: package/lock PC-16 M; .gitignore M ajeno y research/PC-15/PC-16 untracked preservados; diff --check sin errores, solo aviso EOL ajeno. Sin commit/push. | Cerrar PC-16 y reportar resultado/riesgo residual. |
 
+| 2026-10-13T18:01:50Z | DOCUMENTING | Persona responsable → Orc | Tras QA OK pide activar Doc para documentación útil pendiente PC-16, autoriza ese alcance. README actualmente instruye npm ci sin advertencia codemode; Orc define solo README.md/instalación, sin cambio código/deps/auth/modelos/push. git status actual no muestra package/lock M (antes sí); manifest/lock actuales contienen SDK/codemode 1.0.1. No inferir causa del cambio de Git; .gitignore M y PC-15/research untracked permanecen. git diff --check sin errores, aviso EOL .gitignore ajeno. | Verificar Doc conectado/contexto y despachar documentación breve, esperar DONE; después cerrar de nuevo. |
+
+| 2026-10-13T18:04:01Z | DONE | Doc → Orc | DONE PC-16: README.md instalación añade advertencia SDK 1.0.1/codemode lock1.0.1 frente a 1.2.0 y comandos npm ls/import/check/tests/audit tras actualizar dependencias. Orc leyó README/diff: solo 10 líneas añadidas en Requirements and installation, sin secretos ni cambios de contrato; git diff --check -- README.md y general sin errores (avisos EOL ajenos), status: README M documental; .gitignore M ajeno, PC-16 plan/ledger M, research/PC-15 untracked. package/lock sin diff, versiones actuales 1.0.1/1.0.1; sin inferir causa de estado Git. No npm install/proveedor/push en entrega Doc. | Confirmar cierre documental y riesgo residual, no QA adicional de producto. |
+
+| 2026-10-14T01:01:10Z | DONE | Persona responsable → Orc | Documentación README.md publicada en `origin/master`, commit `6cad6b1a265fab877d52cc559c49b87e75875ae3`; persona informa `git ls-remote` coincidente. Orc verificó HEAD local igual y `git show --name-only HEAD` exclusivamente README.md. Autoriza publicar en segundo commit exclusivo de PC-16 task-plan.md/ledger.md tras preparación, sin incluir .gitignore M ni research/PC-15 untracked. Estado DONE y QA OK humana permanecen. | Preparar solo registros PC-16 para commit exclusivo por la persona; no autorreferenciar hash de ese commit ni ejecutar push desde Orc. |
+
 ## Gestión de contexto de destinatarios
 
 | Fecha/hora | Destinatario | Contexto previo | Compactación | Resultado | Mensaje posterior |
@@ -68,6 +74,8 @@
 | 2026-10-13T16:35:21Z | Cod y Rev | Cod 27%, Rev 27%, ambos idle/cwd Pi-Coach | No requerida | link_list comprobado | Despacho Cod ciclo3/ronda0, Rev handoff directo |
 
 | 2026-10-13T16:37:56Z | Cod y Rev | Cod 29%, Rev 27%, ambos idle/cwd Pi-Coach | No requerida | link_list comprobado | Despacho Cod ciclo4/ronda0, handoff directo a Rev |
+
+| 2026-10-13T18:01:50Z | Doc | 7%, idle/cwd Pi-Coach | No requerida | link_list confirmado, Doc ROLE READY informado por persona | Handoff README PC-16 post-QA |
 
 ## Decisiones
 
@@ -116,7 +124,7 @@ Nota: los recorridos conversacionales 14/14 y los dos de dos turnos del 2026-10-
 
 ## Cierre
 
-- Documentación enviada a Doc: no; solo se autorizaron package.json/package-lock.json y registros de coordinación. Protocolo permite Doc solo para documentación autorizada tras QA OK; no se amplía alcance para README/guía sin tarea propia.
-- Confirmación de documentación: no aplica.
-- Estado final: `DONE`, QA OK humana 2026-10-13, sin commit/push.
+- Documentación enviada a Doc: nota acotada README.md instalación autorizada por persona tras QA OK.
+- Confirmación de documentación: DONE Doc; Orc revisó solo diff README y git diff --check -- README.md OK el 2026-10-13T18:04:01Z. Sintaxis PowerShell no ejecutada por Doc, comandos estándar ya aplicados en QA previa.
+- Estado final: `DONE` tras QA OK humana y documentación confirmada; README publicado en `origin/master` como `6cad6b1a265fab877d52cc559c49b87e75875ae3`. Registros PC-16 preparados para commit exclusivo por la persona; `DONE` no depende del hash de ese commit.
 - Riesgos residuales: SDK 1.0.1 → codemode ^1.0.1; codemode 1.2.0 rompe exports, lock actual fija 1.0.1 y npm ci fue reproducible. npm install sin cambios debe respetar lock compatible, pero updates/cambios/regeneración pueden re-resolver; antes de futuras actualizaciones evaluar override acotado o SDK corregido en tarea aprobada y repetir npm ls/import/tests/audit. Recorridos reales breves 14/14 y dos de dos turnos del asistente no prueban calidad exhaustiva; aceptación QA humana confirmada sin publicar contenido privado.

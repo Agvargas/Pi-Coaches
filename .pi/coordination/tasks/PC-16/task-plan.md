@@ -7,7 +7,7 @@
 - Estado actual: `DONE`
 - Persona responsable: persona responsable de Pi-Coach
 - Creado: 2026-10-12T17:02:54Z
-- Última actualización: 2026-10-13T17:44:33Z
+- Última actualización: 2026-10-14T01:01:10Z
 - Aprobación vigente: autorización inicial PC-16 y `DECISIÓN PC-16: AUTORIZAR SDK 1.0.1`; probar pin exacto, audit/tests/arranque/API local, detener ante incompatibilidad. No push ni cambios preventivos de auth/modelo.
 
 ## Objetivo
@@ -80,9 +80,11 @@ Subsanar los avisos actuales de `npm audit` con la remediación más pequeña y 
 - Comando: PowerShell en raíz del proyecto: `npm audit`; `npm ls @earendil-works/pi-coding-agent @earendil-works/pi-codemode undici brace-expansion --all`; `npm run check`; `node --test`; `node --input-type=module -e "import('@earendil-works/pi-coding-agent').then(() => console.log('sdk_import_ok'))"`. Smoke adicional: con puerto 3000 libre, iniciar child Node propio, GET `/health` y `/frameworks`, detener exclusivamente ese child.
 - Resultado esperado: audit 0, SDK/codemode 1.0.1, undici 8.10.2, brace 5.0.12, check/tests/import OK; health/catalog 200.
 - Resultado observado: verificaciones PowerShell previas del asistente (audit 0, árbol esperado, check, tests 31/31, import ESM y diff --check); smoke HTTP propio health/catalog 200 y negativos 405/400. Con autorización humana reportada, asistente recorrió 14 combinaciones GROW/HEART y dos conversaciones extra de dos turnos con create/message/end/feedback esperado. No se publicaron transcripciones ni credenciales. Esas verificaciones no fueron QA humana ni evaluación cualitativa exhaustiva. La persona responsable confirmó expresamente `QA OK PC-16` el 2026-10-13 tras recibir resultados PowerShell y conversaciones reales; se registra esa aceptación humana, no se atribuye al asistente.
-- Estado: QA humana OK; tarea cerrada, sin push.
+- Estado: QA humana OK; tarea cerrada. README documental publicado por la persona en `origin/master` (commit `6cad6b1a265fab877d52cc559c49b87e75875ae3`); los registros de cierre se preparan para commit exclusivo PC-16. El estado `DONE` no depende del hash de ese commit de coordinación.
 
 ## Documentación
 
-- Archivos autorizados: ninguno fuera de los registros de coordinación PC-16; no se aprobó documentación del producto.
-- Contenido confirmado: resultado de audit/SDK/QA y precaución codemode se conservan en plan/ledger. Conforme al protocolo, Doc se despacha solo si hay documentación autorizada; no se despachó en esta tarea. Una futura guía de dependencias requiere aprobación separada.
+- Autorización humana posterior al QA OK: documentar lo pendiente y útil de PC-16 mediante Doc; fase documental acotada, no se reabre implementación ni QA.
+- Archivo autorizado para Doc: `README.md` exclusivamente, breve nota junto a `npm ci` bajo instalación; sin modificar código, package.json, lock, .gitignore, PC-15, auth/modelos ni otros docs.
+- Contenido confirmado: SDK root 1.0.1 y codemode transitivo 1.0.1 fijado por lock; SDK declara ^1.0.1 y codemode 1.2.0 rompe imports. `npm ci` fue reproducible. Un `npm install` normal sin cambios debe respetar lock compatible; updates/cambios/regeneración pueden re-resolver incompatible. Recomendar npm ci y comprobaciones npm ls/import ESM/tests/audit después de modificar dependencias; evaluar SDK corregido u override acotado solo en futura tarea aprobada, no indicar aplicarlo ahora. QA humana PC-16 OK, pruebas conversacionales breves no certifican calidad general.
+- Resultado documental: Doc entregó DONE; Orc confirmó diff limitado a 10 líneas en `README.md` bajo instalación, contenido preciso sin secretos y `git diff --check -- README.md` OK. Persona publicó README en `origin/master` mediante `6cad6b1a265fab877d52cc559c49b87e75875ae3`, con coincidencia remota reportada y HEAD local verificado. QA OK del producto permanece separada; no se ejecutó QA adicional por la nota.
