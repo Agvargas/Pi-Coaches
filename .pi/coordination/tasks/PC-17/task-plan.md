@@ -4,11 +4,11 @@
 
 ## Estado
 
-- Estado actual: `QA_PENDING`
+- Estado actual: `DONE`
 - Persona responsable: responsable de Pi-Coach
 - Creado: 2026-10-13T18:09:59Z
-- Última actualización: 2026-10-14T00:48:03Z
-- Aprobación vigente: solicitud humana explícita PC-17 para cambiar solo defaults de Character/Evaluator; Sdk→Cod→Rev; QA manual futura PENDIENTE. Autoriza commit/push de archivos exclusivamente PC-17 después de comprobaciones técnicas y revisión, antes de QA manual. Sin push antes de esos gates.
+- Última actualización: 2026-10-14T00:53:26Z
+- Aprobación vigente: solicitud humana explícita PC-17, Sdk→Cod→Rev APPROVE ciclo1/ronda0 y `QA OK PC-17` comunicado por la persona responsable el 2026-10-14. Implementación y registro previo publicados en origin/master en commits `86f3cedf5abf7aa293999f8713dd68c3ad84ac54` y `e7a1dec2b30099278deb58a60a8eec39f5c21c82` según confirmación humana. Registro de cierre preparado para commit exclusivo PC-17; el estado `DONE` no depende del hash de ese commit.
 
 ## Objetivo
 
@@ -68,17 +68,17 @@ En prácticas nuevas, Character usa `openai-codex/gpt-6-luna` con thinking `low`
 - Iteración QA: `0`
 - Ciclo técnico: `1`
 - Ronda técnica: `0`
-- Fuente: solicitud humana PC-17; Cod entregó REVIEW REQUEST ciclo1/ronda0 y Rev emitió APPROVE independiente tras reanudación por límite de uso. QA humana PowerShell PENDIENTE. La persona aclara que la autorización original de commit/push exclusivo PC-17 incluye destino actual `origin/master`; no pedir otro gate de destino. La persona realizará validación del stage, commit y push. Orc no ejecuta Git de producto.
+- Fuente: solicitud humana PC-17; Cod entregó REVIEW REQUEST ciclo1/ronda0 y Rev emitió APPROVE independiente tras reanudación por límite de uso. Persona responsable confirmó `QA OK PC-17` el 2026-10-14 tras validación manual. Los commits PC-17 fueron publicados por la persona en `origin/master`; Orc no ejecutó Git remoto.
 - Comandos: `npm run check`, `node --test`, `git diff --check`, inspección de diffs/estado, smoke local controlado sin proveedor.
 
 ## QA humana desde PowerShell
 
-- Comando: PowerShell desde raíz, servidor propio `node .\src\server.mjs`; en otra terminal GET `/health` y `/frameworks`, luego `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\chat.ps1` para práctica nueva HEART immediate-and-final y GROW final. Detener solo servidor propio; evitar publicar transcript/credenciales. Persona responsable ejecuta la prueba posteriormente.
-- Resultado esperado: Character/Evaluator usan defaults solicitados en nuevas prácticas; no concluir por metadata/tests únicamente.
-- Resultado observado: pendiente.
-- Estado: `QA_PENDING` solo después de APPROVE Rev; no `QA OK` ni `DONE` automáticos.
+- Comando propuesto: PowerShell desde raíz, servidor propio `node .\src\server.mjs`; en otra terminal GET `/health` y `/frameworks`, luego `powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\chat.ps1` para prácticas nuevas HEART immediate-and-final y GROW final. Evitar publicar transcript/credenciales.
+- Resultado esperado: funcionamiento conversacional con los defaults solicitados sin regresiones observadas; identidad/nivel no son visibles por HTTP y se verificaron por código/SDK en revisión.
+- Resultado observado: la persona responsable comunicó expresamente «QA ok» el 2026-10-14 tras la validación manual pendiente. No facilitó transcript ni desglose adicional; no inferir cobertura exhaustiva ni atribuir su QA a tests automáticos.
+- Estado: `QA OK` humano; tarea cerrada.
 
 ## Documentación
 
-- Archivos autorizados: ninguno antes de QA humana.
-- Doc: no despachar antes de QA OK y autorización documental separada si procede.
+- Archivos autorizados: ninguno para documentación del producto en PC-17, incluso tras QA OK; README y demás docs permanecen fuera de alcance.
+- Doc: no se despacha al no existir cambio documental autorizado/solicitado. Si la persona quiere documentar defaults, abrir autorización documental separada; el cierre de PC-17 no depende de ella.

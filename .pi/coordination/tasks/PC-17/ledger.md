@@ -30,6 +30,8 @@
 
 | 2026-10-14T00:48:55Z | QA_PENDING | Persona responsable → Orc | Commit/push PC-17 completados: `86f3cedf5abf7aa293999f8713dd68c3ad84ac54` en `origin/master`; persona reporta `git ls-remote` con mismo hash. Orc verificó `git rev-parse HEAD` igual, rama `master` y `git show --name-only HEAD`: exactamente seis archivos PC-17 (src/sdk-session-factory.mjs, src/training-service.mjs, test/training-service.test.mjs, test/sdk-session-factory.test.mjs, task-plan.md y ledger.md de PC-17). Técnicas reportadas: `npm run check` OK, `node --test` 35/35, import ESM y `git diff --check` OK; Rev APPROVE previo ciclo1/ronda0 con 10/10 focales. Status local sigue .gitignore/README/PC-16 M, research/PC-15 untracked fuera del commit. Orc no ejecutó remote; aceptación de ref se basa en evidencia humana de ls-remote. | Persona publicará actualización de este ledger en segundo commit exclusivo PC-17; no incluir archivos ajenos. QA PowerShell conversacional humana pendiente; no QA OK/DONE/Doc. |
 
+| 2026-10-14T00:53:26Z | DONE | Persona responsable → Orc | Persona comunica `QA OK PC-17` tras validación manual pendiente. Orc registra confirmación humana sin transcripciones ni afirmar que pruebas automatizadas son QA humana. Commit implementación `86f3cedf5abf7aa293999f8713dd68c3ad84ac54` y segundo commit exclusivo ledger `e7a1dec2b30099278deb58a60a8eec39f5c21c82` publicados en origin/master según persona/ls-remote; HEAD local e7a1dec verificado. git status actual: solo .gitignore/README/PC-16 M y research/PC-15 untracked ajenos; git diff --check sin errores salvo avisos EOL ajenos. No documentación del producto autorizada en PC-17: por protocolo no despachar Doc, sin cambio de producto/deps/push. | Cerrar PC-17; plan/ledger de cierre preparados para commit exclusivo PC-17. El estado `DONE` no depende del hash de ese commit. |
+
 ## Contexto y destinatarios
 
 | Fecha/hora | Destinatario | Contexto previo | Compactación | Resultado | Mensaje |
@@ -64,11 +66,11 @@
 
 | Fecha/hora | Comando/resultados | Estado |
 | --- | --- | --- |
-| pendiente | PowerShell HEART immediate-and-final y GROW final nuevas prácticas con servidor propio; comprobar inicio, accepted, feedback, /end, sin divulgar transcript. | No realizada; no QA OK. |
+| 2026-10-14T00:53:26Z | PowerShell conversacional humano propuesto (HEART immediate-and-final, GROW final); persona no envía transcripción ni detalle. | Persona confirma expresamente `QA OK PC-17` tras su validación manual. Aceptación humana distinta de checks Cod/Rev. |
 
 ## Cierre
 
-- Commit/push PC-17: implementación publicada por persona en `origin/master`, commit `86f3cedf5abf7aa293999f8713dd68c3ad84ac54` (HEAD y seis paths verificados por Orc; ref remota verificada por persona). Actualización posterior de ledger a publicarse en segundo commit exclusivo PC-17, aún sin hash informado. QA humana pendiente.
-- Documentación: ninguna antes de QA OK.
-- Estado final: pendiente; detener en QA_PENDING tras revisión técnica y entrega.
-- Riesgos: modelos disponibles en catálogo no garantizan acceso/auth/calidad; cambios locales previos protegidos.
+- Commit/push PC-17: implementación `86f3cedf5abf7aa293999f8713dd68c3ad84ac54` y segundo commit de ledger `e7a1dec2b30099278deb58a60a8eec39f5c21c82`, origin/master confirmados por persona. Orc no hizo push; registro de cierre preparado para commit exclusivo PC-17, sin necesidad de añadir al ledger el hash de ese mismo commit.
+- Documentación: no se despachó Doc: README/documentación del producto no autorizados para PC-17. Una futura nota sobre defaults requiere autorización documental separada, no bloquea cierre.
+- Estado final: `DONE`, QA OK humana confirmada el 2026-10-14; no se publicaron transcripciones ni secretos.
+- Riesgos: QA manual aceptada no demuestra calidad exhaustiva ni identidad/nivel por HTTP; disponibilidad de modelos/cuenta puede cambiar. Cambios locales ajenos protegidos.
