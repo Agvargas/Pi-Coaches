@@ -28,6 +28,8 @@
 
 | 2026-10-14T00:48:03Z | QA_PENDING | Persona responsable → Orc | Aclara autorización original: commit/push exclusivo PC-17 a ref actual origin/master; persona verificará stage y realizará Git; no pedir segundo gate. Incluye registros task-plan.md/ledger.md PC-17 editados solo por Orc junto a cuatro archivos producto/test. Git status master...origin/master, stage vacío, .gitignore/README/PC-16 M y PC-15/research untracked fuera; diff --check sin errores salvo EOL ajeno. | Persona stagea y comprueba seis archivos, commit/push; Orc registra resultado cuando se comunique. QA PowerShell manual sigue PENDIENTE; no QA OK/DONE/Doc. |
 
+| 2026-10-14T00:48:55Z | QA_PENDING | Persona responsable → Orc | Commit/push PC-17 completados: `86f3cedf5abf7aa293999f8713dd68c3ad84ac54` en `origin/master`; persona reporta `git ls-remote` con mismo hash. Orc verificó `git rev-parse HEAD` igual, rama `master` y `git show --name-only HEAD`: exactamente seis archivos PC-17 (src/sdk-session-factory.mjs, src/training-service.mjs, test/training-service.test.mjs, test/sdk-session-factory.test.mjs, task-plan.md y ledger.md de PC-17). Técnicas reportadas: `npm run check` OK, `node --test` 35/35, import ESM y `git diff --check` OK; Rev APPROVE previo ciclo1/ronda0 con 10/10 focales. Status local sigue .gitignore/README/PC-16 M, research/PC-15 untracked fuera del commit. Orc no ejecutó remote; aceptación de ref se basa en evidencia humana de ls-remote. | Persona publicará actualización de este ledger en segundo commit exclusivo PC-17; no incluir archivos ajenos. QA PowerShell conversacional humana pendiente; no QA OK/DONE/Doc. |
+
 ## Contexto y destinatarios
 
 | Fecha/hora | Destinatario | Contexto previo | Compactación | Resultado | Mensaje |
@@ -66,7 +68,7 @@
 
 ## Cierre
 
-- Commit/push PC-17: autorizado a `origin/master` por aclaración humana; no realizado por Orc. Stage vacío al 2026-10-14T00:48:03Z; solo cuatro archivos producto/test PC-17 y los dos registros PC-17 de Orc permitidos. Persona realiza validación de stage/commit/push. QA humana pendiente.
+- Commit/push PC-17: implementación publicada por persona en `origin/master`, commit `86f3cedf5abf7aa293999f8713dd68c3ad84ac54` (HEAD y seis paths verificados por Orc; ref remota verificada por persona). Actualización posterior de ledger a publicarse en segundo commit exclusivo PC-17, aún sin hash informado. QA humana pendiente.
 - Documentación: ninguna antes de QA OK.
 - Estado final: pendiente; detener en QA_PENDING tras revisión técnica y entrega.
 - Riesgos: modelos disponibles en catálogo no garantizan acceso/auth/calidad; cambios locales previos protegidos.
