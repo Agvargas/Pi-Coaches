@@ -15,6 +15,16 @@ npm ci
 npm start
 ```
 
+Use `npm ci` to install from the committed lockfile. The current lockfile pins the SDK's compatible `@earendil-works/pi-codemode` dependency at 1.0.1; the SDK declares a compatible range that can also include 1.2.0, whose removed exports break the SDK import. A normal `npm install` without dependency changes should respect a compatible lockfile, but dependency updates or lockfile regeneration can resolve a different version. After changing dependencies, check the resolved tree and rerun the project checks:
+
+```powershell
+npm ls @earendil-works/pi-coding-agent @earendil-works/pi-codemode undici brace-expansion --all
+node --input-type=module -e "import('@earendil-works/pi-coding-agent').then(() => console.log('sdk_import_ok'))"
+npm run check
+node --test
+npm audit
+```
+
 Leave the server running in that console. In another console, start the chat:
 
 ```powershell
